@@ -21,9 +21,11 @@ import (
 
 	"github.com/Laky-64/gologging"
 	"github.com/amarnathcjd/gogram/telegram"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	
+	// Updated to use the v2 MongoDB driver to match database.go
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	"main/internal/config"
 	"main/internal/core"
@@ -58,8 +60,9 @@ func getMediaCollection() *mongo.Collection {
 		if config.DbURI == "" {
 			return
 		}
+		// v2 Connection Syntax
 		opts := options.Client().ApplyURI(config.DbURI)
-		client, err := mongo.Connect(context.Background(), opts)
+		client, err := mongo.Connect(opts)
 		if err != nil {
 			gologging.Error("FallenApi: Failed to connect to Media DB: " + err.Error())
 			return
