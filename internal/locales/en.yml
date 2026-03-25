@@ -4,21 +4,21 @@ name: "🇺🇸 English"
 CONFIRM_RESUME_BTN: "▶️ Resume"
 CONFIRM_UNMUTE_BTN: "🔊 Unmute"
 CONFIRM_STOP_BTN: "⏹️ Stop"
-ADD_ME_BTN: "➕ Add Me to Your group"
+ADD_ME_BTN: "Add Me to Your group"
 BROADCAST_CANCEL_BTN: "🚫 Cancel Broadcast"
 CLOSE_BTN: "Close"
 DOWNLOAD_CANCEL_BTN: "🚦 Cancel Downloading"
 GC_HELP_BTN: "📒 Commands"
 
-START_HELP_BTN: "❓ Help & Commands"
+START_HELP_BTN: "Help & Commands"
+SOURCE_BTN: "Source"
+UPDATES_BTN: "Updates"
+SUPPORT_BTN: "Support"
 
-UPDATES_BTN: "📢 Updates"
-SUPPORT_BTN: "💬 Support"
-
-HELP_ADMINS_BTN: "🛠 Admins"
-HELP_PUBLIC_BTN: "🌍 Public"
-HELP_OWNER_BTN: "👑 Owner"
-HELP_SUDOERS_BTN: "⚡ Sudoers"
+HELP_ADMINS_BTN: "Admins"
+HELP_PUBLIC_BTN: "Public"
+HELP_OWNER_BTN: "Owner"
+HELP_SUDOERS_BTN: "Sudoers"
 
 BACK_BTN: "⬅️ Back"
 
@@ -914,15 +914,10 @@ unmute_success: |
   {speed_line}
 
 
-# 🔊 Voice Chat Events
-voicechat_ended: "<b>⚠️ Video chat ended</b>\n\n<i>⏰ Duration: {duration}</i>"
-voicechat_started: "<b>♻️ Voice chat started!</b>\n\n<i>Use /play [song name] to play music.</i>"
-
-# Commands help
 help_owner: |
   👑 <b>Owner Commands</b>
 
-  <i>Exclusive tools for managing sudoers, executing system code, and performing bot administration securely.</i>
+  Exclusive tools for managing sudoers, executing system code, and performing bot administration securely.
 
   <b>Commands:</b>
   <b>/addsudo</b> - Add a new user to bot's sudolist
