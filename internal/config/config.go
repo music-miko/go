@@ -120,11 +120,11 @@ func loadConfig() {
 
 	StartImage = getString(
 		"START_IMG_URL",
-		"https://files.catbox.moe/ti82r1.jpg",
+		"https://files.catbox.moe/xqyakl.jpg",
 	)
 	PingImage = getString(
 		"PING_IMG_URL",
-		"https://files.catbox.moe/he87u5.jpg",
+		"https://files.catbox.moe/po9y7v.jpg",
 	)
 	Port = getString("PORT", "8001")
 }
