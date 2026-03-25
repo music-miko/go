@@ -38,7 +38,6 @@ var AllCommands = BotCommands{
 		{Command: "start", Description: "Start the bot."},
 		{Command: "help", Description: "Show help menu."},
 		{Command: "ping", Description: "Check if the bot is alive."},
-		{Command: "sudolist", Description: "List sudo users."},
 	},
 	PrivateSudoCommands: []*telegram.BotCommand{
 		{Command: "ac", Description: "Show active voice chats."},
