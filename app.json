@@ -53,7 +53,7 @@
         },
         "DURATION_LIMIT": {
             "description": "The maximum duration of a track in seconds.",
-            "value": "4200",
+            "value": "3600",
             "required": false
         },
         "LEAVE_ON_DEMOTED": {
@@ -63,7 +63,7 @@
         },
         "QUEUE_LIMIT": {
             "description": "The maximum number of tracks allowed in the queue.",
-            "value": "7",
+            "value": "10",
             "required": false
         },
         "START_IMG_URL": {
@@ -88,7 +88,7 @@
         },
         "SET_CMDS": {
             "description": "Set to 'true' to have the bot set its commands on startup.",
-            "value": "false",
+            "value": "true",
             "required": false
         },
         "MAX_AUTH_USERS": {
