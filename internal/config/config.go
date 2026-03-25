@@ -126,7 +126,7 @@ func loadConfig() {
 		"PING_IMG_URL",
 		"https://files.catbox.moe/he87u5.jpg",
 	)
-	Port = getString("PORT", "8000")
+	Port = getString("PORT", "8001")
 }
 
 func validateConfig() {
