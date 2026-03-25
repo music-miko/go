@@ -633,6 +633,7 @@ func playTracksAndRespond(
 			replyMsg.Respond(b.String())
 		}
 	} else {
+		// QUEUE MESSAGE - THUMBNAIL LOGIC REMOVED HERE
 		if len(tracks) == 1 {
 			title := html.EscapeString(utils.ShortTitle(mainTrack.Title, 25))
 			btn := core.GetPlayMarkup(chatID, r, true)
@@ -640,9 +641,8 @@ func playTracksAndRespond(
 				ParseMode:   "HTML",
 				ReplyMarkup: btn,
 			}
-			if mainTrack.Artwork != "" && shouldShowThumb(chatID) {
-				opt.Media = utils.CleanURL(mainTrack.Artwork)
-			}
+			
+			// Removed: opt.Media = utils.CleanURL(...) to keep queue messages text-only
 
 			addedText := F(chatID, "play_added_to_queue_single", locales.Arg{
 				"index":    len(r.Queue()),
