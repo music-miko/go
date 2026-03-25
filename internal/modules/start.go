@@ -59,6 +59,7 @@ func startHandler(m *tg.NewMessage) error {
 			Caption:     caption,
 			NoForwards:  true,
 			ReplyMarkup: core.GetStartMarkup(m.ChannelID()),
+			EffectID:    5104841245755180586, // ❤️ Heart Effect ID
 		})
 		if err != nil {
 			gologging.Error(
@@ -69,6 +70,7 @@ func startHandler(m *tg.NewMessage) error {
 				Caption:     caption,
 				NoForwards:  true,
 				ReplyMarkup: core.GetStartMarkup(m.ChannelID()),
+				EffectID:    5104841245755180586, // ❤️ Heart Effect ID
 			})
 			if err != nil {
 				gologging.Error(
@@ -78,6 +80,7 @@ func startHandler(m *tg.NewMessage) error {
 				_, err = m.Respond(caption, &tg.SendOptions{
 					NoForwards:  true,
 					ReplyMarkup: core.GetStartMarkup(m.ChannelID()),
+					EffectID:    5104841245755180586, // ❤️ Heart Effect ID
 				})
 				return err
 			}
@@ -118,7 +121,10 @@ func startCB(cb *tg.CallbackQuery) error {
 	}
 
 	if config.StartImage != "" {
-		sendOpt.Media = config.StartImage
+		sendOpt.Media = &tg.InputMediaWebPage{
+			URL:             config.StartImage,
+			ForceLargeMedia: true,
+		}
 	}
 
 	cb.Edit(caption, sendOpt)
