@@ -1,6 +1,6 @@
-# 🏛️ YukkiMusic Core Package
+# 🏛️ ArcMusic Core Package
 
-The `core` package is the central orchestration and state management layer of the YukkiMusic bot. It maintains the real-time status of active playback sessions (Rooms), tracks chat-specific properties (ChatState), and manages the lifecycle of Telegram assistant accounts.
+The `core` package is the central orchestration and state management layer of the ArcMusic bot. It maintains the real-time status of active playback sessions (Rooms), tracks chat-specific properties (ChatState), and manages the lifecycle of Telegram assistant accounts.
 
 ## 🌟 Overview
 
