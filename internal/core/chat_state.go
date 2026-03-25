@@ -151,8 +151,24 @@ func (s *ChatState) IsAssistantPresent(force bool) (bool, error) {
 	}
 
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.assistant.present, nil
+	present := s.assistant.present
+	s.mu.RUnlock()
+
+	// -------------------------------------------------------------
+	// CACHE WARMING FIX: "missing from cache" / "no channel with id"
+	// Even if the Bot knows the assistant is in the group, the 
+	// Assistant's MTProto client might have lost it from memory.
+	// We force a peer resolution, and if it fails, we trigger a 
+	// silent re-join using the invite link to populate the cache.
+	// -------------------------------------------------------------
+	if present && s.Assistant != nil && s.Assistant.Client != nil {
+		if _, err := s.Assistant.Client.ResolvePeer(s.ChatID); err != nil {
+			gologging.InfoF("Assistant is present but chat %d is missing from cache. Re-caching via invite link...", s.ChatID)
+			_ = s.attemptJoin()
+		}
+	}
+
+	return present, nil
 }
 
 func (s *ChatState) IsAssistantBanned(force bool) (bool, error) {
