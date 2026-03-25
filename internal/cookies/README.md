@@ -37,4 +37,4 @@ The bot couldn't find any valid `.txt` files in `internal/cookies/`.
 - **Redundancy:** Use multiple cookie files from different accounts to avoid rate limits.
 
 ---
-**Note:** For more help, join our [Support Chat](https://t.me/TheTeamVk).
+**Note:** For more help, join our [Support Chat](https://t.me/ArcChatz).
