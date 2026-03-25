@@ -1,6 +1,6 @@
 # ⚙️ Configuration Guide
 
-This document describes all configuration variables used in YukkiMusic. These can be set as environment variables or in a `.env` file in the project root.
+This document describes all configuration variables used in ArcMusic. These can be set as environment variables or in a `.env` file in the project root.
 
 ## 🚀 Flexible Loading
 
@@ -40,8 +40,8 @@ These must be set for the bot to start.
 | :--- | :--- | :--- |
 | `SPOTIFY_CLIENT_ID` | `None` | Spotify API Client ID for metadata resolution. |
 | `SPOTIFY_CLIENT_SECRET` | `None` | Spotify API Client Secret for metadata resolution. |
-| `FALLEN_API_KEY` | `""` | API Key for [Fallen API](https://beta.fallenapi.fun) YouTube downloader. |
-| `FALLEN_API_URL` | `https://beta.fallenapi.fun` | Base URL for Fallen API. |
+| `ARC_API_KEY` | `""` | API Key for [ARC API](https://deadlinetech.site) YouTube downloader. |
+| `ARC_API_URL` | `https://api.deadlinetech.site` | Base URL for Arc API. |
 
 ## 🛠️ Bot Behavior & Limits
 
