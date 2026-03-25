@@ -96,9 +96,7 @@ func (f *FallenApiPlatform) Download(
 	statusMsg *telegram.NewMessage,
 ) (string, error) {
 
-	// STRICT AUDIO ONLY: Fallen api didn't support video downloads so disable it
-	track.Video = false
-
+	// 0. Check Local Cache First
 	if f := findFile(track); f != "" {
 		gologging.Debug("FallenApi: Download -> Local Cached File -> " + f)
 		return f, nil
@@ -109,26 +107,35 @@ func (f *FallenApiPlatform) Download(
 		pm = utils.GetProgress(statusMsg)
 	}
 
-	path := getPath(track, ".mp3")
+	ext := "mp3"
+	if track.Video {
+		ext = "mp4"
+	}
+	path := getPath(track, "."+ext)
 
 	// 1. Try Media DB Cache (Telegram Channel Download)
 	if dbPath, err := f.downloadFromMediaDB(ctx, track, path, pm); err == nil && dbPath != "" {
-		gologging.Info(fmt.Sprintf("✅ DB-CACHE | %s", track.ID))
+		gologging.Info(fmt.Sprintf("✅ DB-CACHE | %s | Video: %t", track.ID, track.Video))
 		return dbPath, nil
+	} else if err != nil {
+		gologging.DebugF("FallenApi DB check failed or missed: %v", err)
 	}
 
 	gologging.Debug("FallenApi: DB Miss -> Falling back to API V2 Download")
 
-	// 2. Try V2 API Polling
+	// 2. Try V2 API Polling (Optimized Download)
 	dlURL, err := f.v2Download(ctx, track)
 	if err != nil {
+		gologging.ErrorF("FallenApi: V2 Download failed: %v", err)
 		return "", err
 	}
 
 	var downloadErr error
 	if telegramDLRegex.MatchString(dlURL) {
+		gologging.DebugF("FallenApi: Downloading via Telegram URL: %s", dlURL)
 		path, downloadErr = f.downloadFromTelegram(ctx, dlURL, path, pm)
 	} else {
+		gologging.DebugF("FallenApi: Downloading via CDN URL: %s", dlURL)
 		downloadErr = f.downloadFromURL(ctx, dlURL, path)
 	}
 
@@ -139,7 +146,7 @@ func (f *FallenApiPlatform) Download(
 		return "", errors.New("empty file returned by API")
 	}
 
-	gologging.Info(fmt.Sprintf("✅ V2-API | %s", track.ID))
+	gologging.Info(fmt.Sprintf("✅ V2-API | %s | Video: %t", track.ID, track.Video))
 	return path, nil
 }
 
@@ -149,7 +156,7 @@ func (*FallenApiPlatform) Search(string, bool) ([]*state.Track, error) {
 	return nil, nil
 }
 
-// --- Database & API ---
+// --- Optimization Core: Database & API V2 ---
 
 func (f *FallenApiPlatform) downloadFromMediaDB(
 	ctx context.Context,
@@ -158,20 +165,30 @@ func (f *FallenApiPlatform) downloadFromMediaDB(
 	pm *telegram.ProgressManager,
 ) (string, error) {
 	col := getMediaCollection()
-	if col == nil || config.MediachannelId == 0 {
-		return "", errors.New("db or media channel not configured")
+	if col == nil {
+		return "", errors.New("db not configured")
+	}
+	if config.MediachannelId == 0 {
+		return "", errors.New("media channel not configured")
+	}
+
+	ext := "mp3"
+	mediaType := "a"
+	if track.Video {
+		ext = "mp4"
+		mediaType = "v"
 	}
 
 	keys := []string{
-		fmt.Sprintf("%s.mp3", track.ID),
+		fmt.Sprintf("%s.%s", track.ID, ext),
 		track.ID,
-		fmt.Sprintf("%s_a", track.ID),
-		fmt.Sprintf("%s_a.mp3", track.ID),
+		fmt.Sprintf("%s_%s", track.ID, mediaType),
+		fmt.Sprintf("%s_%s.%s", track.ID, mediaType, ext),
 	}
 
 	filter := bson.M{
 		"track_id": bson.M{"$in": keys},
-		"isVideo":  false, // Hardcoded to false for audio
+		"isVideo":  track.Video, // Dynamically checks audio vs video
 	}
 
 	var result struct {
@@ -180,12 +197,17 @@ func (f *FallenApiPlatform) downloadFromMediaDB(
 
 	err := col.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return "", errors.New("track not found in db cache")
+		}
 		return "", err
 	}
 
 	if result.MessageID == 0 {
 		return "", errors.New("invalid message_id in db")
 	}
+
+	gologging.DebugF("FallenApi: Found MessageID %d in MediaChannel %d", result.MessageID, config.MediachannelId)
 
 	msg, err := core.Bot.GetMessageByID(config.MediachannelId, result.MessageID)
 	if err != nil {
@@ -219,10 +241,11 @@ func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) 
 	}
 
 	for cycle := 0; cycle < 5; cycle++ {
-		reqURL := fmt.Sprintf("%s/youtube/v2/download?api_key=%s&query=%s&isVideo=false",
+		reqURL := fmt.Sprintf("%s/youtube/v2/download?api_key=%s&query=%s&isVideo=%t",
 			strings.TrimRight(apiURL, "/"),
 			apiKey,
 			url.QueryEscape(query),
+			track.Video, // Dynamically requests audio or video
 		)
 
 		var respData map[string]any
@@ -240,6 +263,7 @@ func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) 
 		if candidate == "" || strings.Contains(strings.ToLower(candidate), "processing") || strings.Contains(strings.ToLower(candidate), "queued") {
 			jobID := f.extractJobID(respData)
 			if jobID != "" {
+				gologging.DebugF("FallenApi: Polling Job ID: %s", jobID)
 				candidate = f.pollJobStatus(ctx, jobID)
 			}
 		}
@@ -293,7 +317,7 @@ func (f *FallenApiPlatform) extractJobID(data map[string]any) string {
 func (f *FallenApiPlatform) pollJobStatus(ctx context.Context, jobID string) string {
 	apiURL := config.FallenAPIURL
 	apiKey := config.FallenAPIKey
-	interval := 2.0 
+	interval := 2.0 // seconds
 
 	for attempt := 0; attempt < 10; attempt++ {
 		time.Sleep(time.Duration(interval * float64(time.Second)))
@@ -310,7 +334,7 @@ func (f *FallenApiPlatform) pollJobStatus(ctx context.Context, jobID string) str
 				return cand
 			}
 		}
-		interval *= 1.2 
+		interval *= 1.2 // Exponential backoff
 	}
 	return ""
 }
@@ -324,6 +348,8 @@ func (f *FallenApiPlatform) normalizeURL(candidate, apiURL string) string {
 	}
 	return strings.TrimRight(apiURL, "/") + "/" + candidate
 }
+
+// --- Standard HTTP & Telegram Downloader Base ---
 
 func (f *FallenApiPlatform) downloadFromURL(
 	ctx context.Context,
