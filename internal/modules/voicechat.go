@@ -1,31 +1,17 @@
 /*
- * ● YukkiMusic
  * ○ A high-performance engine for streaming music in Telegram voicechats.
  *
- * Copyright (C) 2026 TheTeamVivek
- *
- * This program is free software: you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * Repository: https://github.com/TheTeamVivek/YukkiMusic
+ * Copyright (C) 2026 Team Arc
  */
 
 package modules
 
 import (
-	"time"
-
 	"github.com/Laky-64/gologging"
 	"github.com/amarnathcjd/gogram/telegram"
 
 	"main/internal/core"
 	"main/internal/database"
-	"main/internal/locales"
 	"main/internal/utils"
 )
 
@@ -62,31 +48,7 @@ func handleVoiceChatAction(
 
 	s.SetVoiceChatActive(isActive)
 
-	msgKey := utils.IfElse(isActive, "voicechat_started", "voicechat_ended")
-	m.Respond(
-		F(
-			chatID,
-			msgKey,
-			locales.Arg{"duration": formatDuration(int(action.Duration))},
-		),
-	)
-	gologging.DebugF("Voice chat %s in %d", msgKey, chatID)
-
-	if !isActive {
-		go func() {
-			time.Sleep(500 * time.Millisecond)
-			core.DeleteRoom(chatID)
-			gologging.DebugF(
-				"Room destroyed for ended voice chat in %d",
-				chatID,
-			)
-		}()
-	}
-
+	actionStr := utils.IfElse(isActive, "started", "ended")
+	gologging.DebugF("Voice chat %s in %d", actionStr, chatID)
 	return telegram.ErrEndGroup
-}
-
-func isValidChatType(m *telegram.NewMessage) bool {
-	return m.ChatType() != telegram.EntityChat ||
-		(m.Channel != nil && m.Channel.Megagroup)
 }
