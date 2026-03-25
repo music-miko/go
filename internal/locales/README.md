@@ -1,6 +1,6 @@
 # 🌍 Localization System
 
-This document explains the localization system used in YukkiMusic and how to add new languages.
+This document explains the localization system used in ArcMusic and how to add new languages.
 
 ## 📂 File Structure
 
