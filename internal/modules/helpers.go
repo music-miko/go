@@ -142,11 +142,6 @@ func sendPlayLogs(m *tg.NewMessage, track *state.Track, queued bool) {
 		fmt.Fprintf(&sb, "<b><u>%s</u></b>\n\n", header)
 	}
 
-	// artwork block
-	if track.Artwork != "" {
-		sb.WriteString("<blockquote>")
-	}
-
 	// Track
 	fmt.Fprintf(&sb,
 		"<b>%s</b> <a href=\"%s\">%s</a>\n",
@@ -186,17 +181,8 @@ func sendPlayLogs(m *tg.NewMessage, track *state.Track, queued bool) {
 		time.Now().Format("2006-01-02 15:04:05"),
 	)
 
-	// Sending
-	if track.Artwork != "" {
-		sb.WriteString("\n</blockquote>")
-		_, err = core.Bot.SendMedia(
-			config.LoggerID,
-			utils.CleanURL(track.Artwork),
-			&tg.MediaOptions{Caption: sb.String()},
-		)
-	} else {
-		_, err = core.Bot.SendMessage(config.LoggerID, sb.String())
-	}
+	// Sending (Text Only)
+	_, err = core.Bot.SendMessage(config.LoggerID, sb.String(), &tg.SendOptions{ParseMode: "HTML", LinkPreview: false})
 
 	if err != nil {
 		gologging.Error("Failed to send logger msg: " + err.Error())
