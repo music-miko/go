@@ -40,6 +40,8 @@ var (
 
 	// Optional Variables
 	OwnerID             int64
+	MediachannelId      int64
+	DbURI               string
 	SpotifyClientID     string
 	SpotifyClientSecret string
 	FallenAPIURL        string
@@ -109,28 +111,30 @@ func loadConfig() {
 
 	// Load Optional
 	OwnerID = getInt64("OWNER_ID", 0)
+	MediachannelId = getInt64("MEDIA_CHANNEL_ID", 0)
+	DbURI = getString("DB_URI", "")
 	SpotifyClientID = getString("SPOTIFY_CLIENT_ID", "")
 	SpotifyClientSecret = getString("SPOTIFY_CLIENT_SECRET", "")
-	FallenAPIURL = getString("FALLEN_API_URL", "https://beta.fallenapi.fun")
+	FallenAPIURL = getString("FALLEN_API_URL", "https://api.deadlinetech.site")
 	FallenAPIKey = getString("FALLEN_API_KEY", "")
 
 	DefaultLang = getString("DEFAULT_LANG", "en")
 	DurationLimit = int(getInt64("DURATION_LIMIT", 4200)) // In seconds
 	LeaveOnDemoted = getBool("LEAVE_ON_DEMOTED", false)
 	QueueLimit = int(getInt64("QUEUE_LIMIT", 7))
-	SupportChat = getString("SUPPORT_CHAT", "https://t.me/TheTeamVk")
-	SupportChannel = getString("SUPPORT_CHANNEL", "https://t.me/TheTeamVivek")
+	SupportChat = getString("SUPPORT_CHAT", "https://t.me/ArcChatz")
+	SupportChannel = getString("SUPPORT_CHANNEL", "https://t.me/ArcUpdates")
 	CookiesLink = getString("COOKIES_LINK", "")
 	SetCmds = getBool("SET_CMDS", false)
 	MaxAuthUsers = int(getInt64("MAX_AUTH_USERS", 25))
 
 	StartImage = getString(
 		"START_IMG_URL",
-		"https://raw.githubusercontent.com/Vivekkumar-IN/assets/master/images.png",
+		"https://files.catbox.moe/ti82r1.jpg",
 	)
 	PingImage = getString(
 		"PING_IMG_URL",
-		"https://telegra.ph/file/91533956c91d0fd7c9f20.jpg",
+		"https://files.catbox.moe/he87u5.jpg",
 	)
 	Port = getString("PORT", "8000")
 }
