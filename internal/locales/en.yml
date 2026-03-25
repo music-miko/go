@@ -205,7 +205,7 @@ err_assistant_banned: |
 
   I can't play music because {user} (UserID: <code>{id}</code>) is <b>banned</b> or <b>removed</b> from this chat.
 
-  <i>✅ Unbanned them already? Use /reload to refresh.</i>
+  ✅ Unbanned them already? Use /reload to refresh.
 
 err_admin_permission_required: |
   ⚠️ <b>Admin Permission Required</b>
@@ -217,11 +217,11 @@ err_admin_permission_required: |
 err_assistant_get_failed: |
   ⚠️ The system could not assign an assistant to this chat.
 
-  <i>This is usually a temporary issue and should resolve by trying again.</i>
+  This is usually a temporary issue and should resolve by trying again.
 
   <b>➡️ Please retry your command.</b>
 
-  <i>If this keeps happening, please contact support so we can assist you.</i>
+  If this keeps happening, please contact support so we can assist you.
   
 err_assistant_join_rate_limited: |
   ⚠️ Assistant cannot join this chat because it has reached the maximum number of allowed groups.
@@ -229,33 +229,33 @@ err_assistant_join_rate_limited: |
 err_assistant_join_request_sent: |
   ⚠️ Assistant sent a join request, but I could not auto-approve it.
 
-  <i>✅ Please approve the request manually, then try again.</i>
+  ✅ Please approve the request manually, then try again.
 
 err_assistant_invite_link_fetch: |
   ⚠️ Failed to fetch invite link:
-  <i>{error}</i>
+  {error}
 
 err_assistant_invite_failed: |
   ⚠️ Assistant failed to join this chat:
-  <i>{error}</i>
+  {error}
 
 err_connection_timeout: |
   ⚠️ <b>VoiceChat Connection Timeout</b>
 
   Telegram is not responding properly to the voice chat connection right now.
 
-  <i>If this keeps happening, end the voice chat and start it again, then retry.</i>
+  If this keeps happening, end the voice chat and start it again, then retry.
 
 err_no_active_voicechat: |
   🎙️ <b>No Active Voice Chat</b>
 
   I can't join — please start a voice chat first.
 
-  <i>Already started one? Use /reload to refresh.</i>
+  Already started one? Use /reload to refresh.
 
 err_fetch_failed: |
   ⚠️ Failed to fetch chat info:
-  <i>{error}</i>
+  {error}
 
 err_peer_resolve_failed: |
   ⚠️ Failed to resolve peer information. Try again later or re-add the assistant.
@@ -273,7 +273,7 @@ err_rtmp_missing_params: |
   
 err_unknown: |
   ⚠️ Unknown Error Occurred:
-  <i>{error}</i>
+  {error}
 
 err_fetch_tracks: |
   ⚠️ <b>Failed to fetch track details.</b>
@@ -307,7 +307,6 @@ logger_playback_queued: "Playback Queued"
 logger_bot_added: |
   🤖 <b>Bot Added to New Group</b>
   
-  <blockquote>
   <b>Group Name:</b> {group_name}
   <b>Group ID:</b> {group_id}
   <b>Group Username:</b> {group_username}
@@ -316,14 +315,11 @@ logger_bot_added: |
   <b>User ID:</b> {added_by_id}
   <b>User Username:</b> {added_by_username}
 
-  <b>Time:</b> {date_time}
-  </blockquote>
-#  👥 <b>Members Count:</b> {members_count}
 
 logger_bot_removed: |
 
   🤖 <b>Bot Removed from Group</b>
-  <blockquote>
+
   <b>Group Name:</b> {group_name}
   <b>Group ID:</b> {group_id}
   <b>Group Username:</b> {group_username}
@@ -332,8 +328,6 @@ logger_bot_removed: |
   <b>User ID:</b> {removed_by_id}
   <b>User Username:</b> {removed_by_username}
 
-  <b>Time:</b> {date_time}
-  </blockquote>
   
 logger_bot_started: |
   ▶️ <b>{mention} started the bot</b>
@@ -341,11 +335,11 @@ logger_bot_started: |
   <b>Username:</b> {user_username}
   <b>ID:</b> {user_id}
   
-logger_track: "🎧 Track:"
-logger_source: "🔗 Source:"
-logger_group: "📌 Group:"
-logger_requested_by: "👤 Requested by:"
-logger_timestamp: "⏳ Timestamp:"
+logger_track: "Track:"
+logger_source: "Source:"
+logger_group: "Group:"
+logger_requested_by: "Requested by:"
+logger_timestamp: "Timestamp:"
 
 loop_usage: "🔁 <b>Loop Control</b>\n\nUsage: {cmd} [count]\n• 0 - Disable loop\n• 1-10 - Loop count\n\n<i>{count_line}</i>"
 loop_invalid: "⚠️ <b>Invalid loop count.</b>\nUse 0 to disable or 1-10 to set loop count."
@@ -434,7 +428,7 @@ nothumb_status: |
   
   <b>📊 Usage: {cmd} [enable|disable]</b>
   
-  <i>Thumbnail is {action} currently.</i>
+  Thumbnail is {action} currently.
   
 nothumb_fetch_fail: "⚠️ <b>Failed to fetch thumbnail setting.</b>"
 nothumb_already: "ℹ️ Thumbnail display is already {action}."
@@ -607,11 +601,11 @@ rtmp_play_failed: |
 rtmp_now_streaming: |
   📡 <b>Now Streaming (RTMP):</b>
   
-  <b>▫ Track:</b> <a href="{url}">{title}</a>
-  <b>▫ Duration:</b> {duration}
-  <b>▫ Started by:</b> {by}
+  <b>Track:</b> <a href="{url}">{title}</a>
+  <b>Duration:</b> {duration}
+  <b>Started by:</b> {by}
   
-  ⚠️ <i>Note: RTMP has ~15-30s buffering delay</i>
+  ⚠️ Note: RTMP has ~15-30s buffering delay
 
 rtmp_not_streaming: "ℹ️ No active RTMP stream."
 
@@ -633,21 +627,21 @@ rtmp_configured_not_started: |
 rtmp_status_playing: |
   📡 <b>RTMP Stream Status</b>
   
-  <b>▫ State:</b> ▶️ Streaming
-  <b>▫ Position:</b> {position}
-  <b>▫ Server:</b> <code>{server}</code>
+  <b>State:</b> ▶️ Streaming
+  <b>Position:</b> {position}
+  <b>Server:</b> <code>{server}</code>
 
 rtmp_status_paused: |
   📡 <b>RTMP Stream Status</b>
   
-  <b>▫ State:</b> ⏸️ Paused
-  <b>▫ Server:</b> <code>{server}</code>
+  <b>State:</b> ⏸️ Paused
+  <b>Server:</b> <code>{server}</code>
 
 rtmp_status_idle: |
   📡 <b>RTMP Stream Status</b>
   
-  <b>▫ State:</b> ⏹️ Idle
-  <b>▫ Server:</b> <code>{server}</code>
+  <b>State:</b> ⏹️ Idle
+  <b>Server:</b> <code>{server}</code>
 
 rtmp_dm_only: |
   🔒 <b>Security Notice</b>
@@ -887,7 +881,7 @@ start_group: "<b>💫 I’m here!</b> Try a command… if you think you can hand
 
 stream_channelid_fail: "⚠️ Failed to get your connected channel’s ID."
 stream_queue_finished: "No more songs in the queue."
-stream_downloading_next: "📥 Downloading your next track..."
+stream_downloading_next: "Hold On !!\n\n📥 Downloading your next track..."
 stream_download_fail: "❌ Failed to download.\nError: <code>{error}</code>"
 stream_play_fail: "❌ Failed to play the song."
 stream_now_playing: |
