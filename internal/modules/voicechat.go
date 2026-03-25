@@ -52,3 +52,8 @@ func handleVoiceChatAction(
 	gologging.DebugF("Voice chat %s in %d", actionStr, chatID)
 	return telegram.ErrEndGroup
 }
+
+func isValidChatType(m *telegram.NewMessage) bool {
+	return m.ChatType() != telegram.EntityChat ||
+		(m.Channel != nil && m.Channel.Megagroup)
+}
