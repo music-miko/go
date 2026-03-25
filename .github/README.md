@@ -1,24 +1,24 @@
-<h1 align="center">🎧 <b>YukkiMusic</b></h1>
+<h1 align="center">🎧 <b>ArcMusic</b></h1>
 
 <p align="center">
-  <i>⚡ A blazing-fast, reliable, and feature-packed Telegram bot for streaming music in group voice chats — built with Go.</i>
+  <i>A blazing-fast, reliable, and feature-packed Telegram bot for streaming music in group voice chats — built with Go.</i>
 </p>
 <p align="center">
 
   <a href="https://go.dev/">
     <img src="https://img.shields.io/badge/Go-1.25-00ADD8?style=for-the-badge&logo=go&labelColor=000000&logoColor=white" alt="Go Version">
   </a>
-  <a href="https://github.com/TheTeamVivek/YukkiMusic/releases/tag/v3.2.0">
+  <a href="https://github.com/tusar404/ArcMusic/releases/tag/v3.2.0">
     <img src="https://img.shields.io/badge/Version-v3.2-FF9800?style=for-the-badge&logo=semver&labelColor=000000&logoColor=white" alt="Version">
   </a>
   <a href="../LICENSE">
     <img src="https://img.shields.io/badge/License-GPLv3-FF3860?style=for-the-badge&logo=gnu&labelColor=000000&logoColor=white" alt="License: GPLv3">
   </a>
-  <a href="https://github.com/TheTeamVivek/YukkiMusic/stargazers">
-    <img src="https://img.shields.io/github/stars/TheTeamVivek/YukkiMusic?style=for-the-badge&label=Stars&labelColor=000000&color=FFD700&logo=github&logoColor=white" alt="GitHub Stars">
+  <a href="https://github.com/tusar404/ArcMusic/stargazers">
+    <img src="https://img.shields.io/github/stars/tusar404/ArcMusic?style=for-the-badge&label=Stars&labelColor=000000&color=FFD700&logo=github&logoColor=white" alt="GitHub Stars">
   </a>
-  <a href="https://github.com/TheTeamVivek/YukkiMusic/fork">
-    <img src="https://img.shields.io/github/forks/TheTeamVivek/YukkiMusic?style=for-the-badge&label=Forks&labelColor=000000&color=00C853&logo=github&logoColor=white" alt="GitHub Forks">
+  <a href="https://github.com/tusar404/ArcMusic/fork">
+    <img src="https://img.shields.io/github/forks/tusar404/ArcMusic?style=for-the-badge&label=Forks&labelColor=000000&color=00C853&logo=github&logoColor=white" alt="GitHub Forks">
   </a>
 
 </p>
@@ -30,9 +30,9 @@
 
 ### ☁️ Deploy to Heroku (One-Click)
 
-Click the button below to deploy **YukkiMusic** instantly on Heroku:
+Click the button below to deploy **ArcMusic** instantly on Heroku:
 
-<a href="https://heroku.com/deploy?template=https://github.com/TheTeamVivek/YukkiMusic">
+<a href="https://heroku.com/deploy?template=https://github.com/tusar404/ArcMusic">
   <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku">
 </a>
 
@@ -49,8 +49,8 @@ Click the button below to deploy **YukkiMusic** instantly on Heroku:
 
 1. **Clone Repository**
 ```bash
-git clone https://github.com/TheTeamVivek/YukkiMusic.git
-cd YukkiMusic
+git clone https://github.com/tusar404/ArcMusic.git
+cd ArcMusic
 ```
 
 2. **Install Dependencies**
@@ -154,7 +154,7 @@ YukkiMusic uses a **modular platform system** to support multiple music sources:
 1. **Telegram** (Priority: 100) - Direct Telegram audio/video files
 2. **YouTube** (Priority: 90) - YouTube videos and playlists
 3. **Youtubify API** (Priority: 80) - Premium YouTube downloads
-4. **Fallen API** (Priority: 75) - YouTube downloads via Fallen API
+4. **Arc API** (Priority: 75) - YouTube downloads via Fallen API
 5. **YT-DLP** (Priority: 70) - Direct yt-dlp integration
 
 ### How It Works
@@ -178,7 +178,7 @@ YukkiMusic uses a **modular platform system** to support multiple music sources:
 ## 🏗️ Project Structure
 
 ```
-YukkiMusic/
+ArcMusic/
 ├── .github/
 │   └── README.md              # Main documentation (you are here)
 ├── cmd/app/
@@ -223,8 +223,8 @@ YukkiMusic/
 Found a bug? Have a feature request?
 
 - **Use `/bug` command** in the bot to report directly
-- **Join our [Support Chat](https://t.me/TheTeamVk)** for discussions
-- **Open an [Issue on GitHub](https://github.com/TheTeamVivek/YukkiMusic/issues)**
+- **Join our [Support Chat](https://t.me/ArcChatz)** for discussions
+- **Open an [Issue on GitHub](https://github.com/tusar404/ArcMusic/issues)**
 
 ---
 
@@ -248,8 +248,8 @@ See **[Platform System Guide](../internal/platforms/README.md#-how-to-add-a-new-
 This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
 
 ```
-YukkiMusic — A Telegram bot that streams music into group voice chats
-Copyright (C) 2025 TheTeamVivek
+ArcMusic — A Telegram bot that streams music into group voice chats
+Copyright (C) 2026 Team Arc
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -261,17 +261,18 @@ the Free Software Foundation, either version 3 of the License, or
 
 ## 🙌 Credits
 
-- **Maintainer**: [Vivek Kumar](https://github.com/Vivekkumar-in)
+- **Maintainer**: [Tosu](https://github.com/tusar404)
 - **Contributors**: All amazing developers who contributed to this project
+- **Base Repo**: [YukkiMusic](https://github.com/TheTeamVivek/YukkiMusic)
 - **Libraries**: Built with [gogram](https://github.com/AmarnathCJD/gogram), [ntgcalls](https://github.com/pytgcalls/ntgcalls), and more
 
 ---
 
 ## 📞 Support
 
-- **Telegram Support Chat**: [@TheTeamVk](https://t.me/TheTeamVk)
-- **Updates Channel**: [@TheTeamVivek](https://t.me/TheTeamVivek)
-- **GitHub Issues**: [Report bugs](https://github.com/TheTeamVivek/YukkiMusic/issues)
+- **Telegram Support Chat**: [@ArcChatz](https://t.me/ArcChatz)
+- **Updates Channel**: [@ArcUpdates](https://t.me/ArcUpdates)
+- **GitHub Issues**: [Report bugs](https://github.com/tusar404/ArcMusic/issues)
 
 ---
 
