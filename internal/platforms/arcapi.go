@@ -1,8 +1,8 @@
 /*
- * ● YukkiMusic
+ * ● ArcMusic
  * ○ A high-performance engine for streaming music in Telegram voicechats.
  *
- * Copyright (C) 2026 TheTeamVivek
+ * Copyright (C) 2026 Team Arc
  */
 
 package platforms
@@ -36,20 +36,20 @@ var telegramDLRegex = regexp.MustCompile(
 	`https:\/\/t\.me\/([a-zA-Z0-9_]{5,})\/(\d+)`,
 )
 
-const PlatformFallenApi state.PlatformName = "FallenApi"
+const PlatformArcApi state.PlatformName = "ArcApi"
 
 var (
 	mediaDbOnce     sync.Once
 	mediaCollection *mongo.Collection
 )
 
-type FallenApiPlatform struct {
+type ArcApiPlatform struct {
 	name state.PlatformName
 }
 
 func init() {
-	Register(80, &FallenApiPlatform{
-		name: PlatformFallenApi,
+	Register(80, &ArcApiPlatform{
+		name: PlatformArcApi,
 	})
 }
 
@@ -62,35 +62,35 @@ func getMediaCollection() *mongo.Collection {
 		opts := options.Client().ApplyURI(config.DbURI)
 		client, err := mongo.Connect(opts)
 		if err != nil {
-			gologging.Error("FallenApi: Failed to connect to Media DB: " + err.Error())
+			gologging.Error("ArcApi: Failed to connect to Media DB: " + err.Error())
 			return
 		}
 		mediaCollection = client.Database("arcapi").Collection("medias")
-		gologging.Info("FallenApi: Connected to Media DB successfully")
+		gologging.Info("ArcApi: Connected to Media DB successfully")
 	})
 	return mediaCollection
 }
 
-func (f *FallenApiPlatform) Name() state.PlatformName {
+func (f *ArcApiPlatform) Name() state.PlatformName {
 	return f.name
 }
 
-func (f *FallenApiPlatform) CanGetTracks(query string) bool {
+func (f *ArcApiPlatform) CanGetTracks(query string) bool {
 	return false
 }
 
-func (f *FallenApiPlatform) GetTracks(_ string, _ bool) ([]*state.Track, error) {
-	return nil, errors.New("fallenapi is a download-only platform")
+func (f *ArcApiPlatform) GetTracks(_ string, _ bool) ([]*state.Track, error) {
+	return nil, errors.New("arcapi is a download-only platform")
 }
 
-func (f *FallenApiPlatform) CanDownload(source state.PlatformName) bool {
-	if config.FallenAPIURL == "" || config.FallenAPIKey == "" {
+func (f *ArcApiPlatform) CanDownload(source state.PlatformName) bool {
+	if config.ArcAPIURL == "" || config.ArcAPIKey == "" {
 		return false
 	}
 	return source == PlatformYouTube
 }
 
-func (f *FallenApiPlatform) Download(
+func (f *ArcApiPlatform) Download(
 	ctx context.Context,
 	track *state.Track,
 	statusMsg *telegram.NewMessage,
@@ -98,7 +98,7 @@ func (f *FallenApiPlatform) Download(
 
 	// 0. Check Local Cache First
 	if f := findFile(track); f != "" {
-		gologging.Debug("FallenApi: Download -> Local Cached File -> " + f)
+		gologging.Debug("ArcApi: Download -> Local Cached File -> " + f)
 		return f, nil
 	}
 
@@ -118,24 +118,24 @@ func (f *FallenApiPlatform) Download(
 		gologging.Info(fmt.Sprintf("✅ DB-CACHE | %s | Video: %t", track.ID, track.Video))
 		return dbPath, nil
 	} else if err != nil {
-		gologging.DebugF("FallenApi DB check failed or missed: %v", err)
+		gologging.DebugF("ArcApi DB check failed or missed: %v", err)
 	}
 
-	gologging.Debug("FallenApi: DB Miss -> Falling back to API V2 Download")
+	gologging.Debug("ArcApi: DB Miss -> Falling back to API V2 Download")
 
 	// 2. Try V2 API Polling (Optimized Download)
 	dlURL, err := f.v2Download(ctx, track)
 	if err != nil {
-		gologging.ErrorF("FallenApi: V2 Download failed: %v", err)
+		gologging.ErrorF("ArcApi: V2 Download failed: %v", err)
 		return "", err
 	}
 
 	var downloadErr error
 	if telegramDLRegex.MatchString(dlURL) {
-		gologging.DebugF("FallenApi: Downloading via Telegram URL: %s", dlURL)
+		gologging.DebugF("ArcApi: Downloading via Telegram URL: %s", dlURL)
 		path, downloadErr = f.downloadFromTelegram(ctx, dlURL, path, pm)
 	} else {
-		gologging.DebugF("FallenApi: Downloading via CDN URL: %s", dlURL)
+		gologging.DebugF("ArcApi: Downloading via CDN URL: %s", dlURL)
 		downloadErr = f.downloadFromURL(ctx, dlURL, path)
 	}
 
@@ -150,15 +150,15 @@ func (f *FallenApiPlatform) Download(
 	return path, nil
 }
 
-func (*FallenApiPlatform) CanSearch() bool { return false }
+func (*ArcApiPlatform) CanSearch() bool { return false }
 
-func (*FallenApiPlatform) Search(string, bool) ([]*state.Track, error) {
+func (*ArcApiPlatform) Search(string, bool) ([]*state.Track, error) {
 	return nil, nil
 }
 
 // --- Optimization Core: Database & API V2 ---
 
-func (f *FallenApiPlatform) downloadFromMediaDB(
+func (f *ArcApiPlatform) downloadFromMediaDB(
 	ctx context.Context,
 	track *state.Track,
 	path string,
@@ -207,7 +207,7 @@ func (f *FallenApiPlatform) downloadFromMediaDB(
 		return "", errors.New("invalid message_id in db")
 	}
 
-	gologging.DebugF("FallenApi: Found MessageID %d in MediaChannel %d", result.MessageID, config.MediachannelId)
+	gologging.DebugF("ArcApi: Found MessageID %d in MediaChannel %d", result.MessageID, config.MediachannelId)
 
 	msg, err := core.Bot.GetMessageByID(config.MediachannelId, result.MessageID)
 	if err != nil {
@@ -231,9 +231,9 @@ func (f *FallenApiPlatform) downloadFromMediaDB(
 	return path, nil
 }
 
-func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) (string, error) {
-	apiURL := config.FallenAPIURL
-	apiKey := config.FallenAPIKey
+func (f *ArcApiPlatform) v2Download(ctx context.Context, track *state.Track) (string, error) {
+	apiURL := config.ArcAPIURL
+	apiKey := config.ArcAPIKey
 
 	query := track.ID
 	if query == "" {
@@ -263,7 +263,7 @@ func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) 
 		if candidate == "" || strings.Contains(strings.ToLower(candidate), "processing") || strings.Contains(strings.ToLower(candidate), "queued") {
 			jobID := f.extractJobID(respData)
 			if jobID != "" {
-				gologging.DebugF("FallenApi: Polling Job ID: %s", jobID)
+				gologging.DebugF("ArcApi: Polling Job ID: %s", jobID)
 				candidate = f.pollJobStatus(ctx, jobID)
 			}
 		}
@@ -277,7 +277,7 @@ func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) 
 	return "", errors.New("failed to extract download url from api after retries")
 }
 
-func (f *FallenApiPlatform) extractCandidate(data map[string]any) string {
+func (f *ArcApiPlatform) extractCandidate(data map[string]any) string {
 	if job, ok := data["job"].(map[string]any); ok {
 		if res, ok := job["result"].(map[string]any); ok {
 			for _, k := range []string{"public_url", "cdnurl", "download_url", "url"} {
@@ -302,7 +302,7 @@ func (f *FallenApiPlatform) extractCandidate(data map[string]any) string {
 	return ""
 }
 
-func (f *FallenApiPlatform) extractJobID(data map[string]any) string {
+func (f *ArcApiPlatform) extractJobID(data map[string]any) string {
 	if job, ok := data["job"].(map[string]any); ok {
 		if id, ok := job["id"].(string); ok {
 			return id
@@ -314,9 +314,9 @@ func (f *FallenApiPlatform) extractJobID(data map[string]any) string {
 	return ""
 }
 
-func (f *FallenApiPlatform) pollJobStatus(ctx context.Context, jobID string) string {
-	apiURL := config.FallenAPIURL
-	apiKey := config.FallenAPIKey
+func (f *ArcApiPlatform) pollJobStatus(ctx context.Context, jobID string) string {
+	apiURL := config.ArcAPIURL
+	apiKey := config.ArcAPIKey
 	interval := 2.0 // seconds
 
 	for attempt := 0; attempt < 10; attempt++ {
@@ -339,7 +339,7 @@ func (f *FallenApiPlatform) pollJobStatus(ctx context.Context, jobID string) str
 	return ""
 }
 
-func (f *FallenApiPlatform) normalizeURL(candidate, apiURL string) string {
+func (f *ArcApiPlatform) normalizeURL(candidate, apiURL string) string {
 	if strings.HasPrefix(candidate, "http://") || strings.HasPrefix(candidate, "https://") {
 		return candidate
 	}
@@ -351,7 +351,7 @@ func (f *FallenApiPlatform) normalizeURL(candidate, apiURL string) string {
 
 // --- Standard HTTP & Telegram Downloader Base ---
 
-func (f *FallenApiPlatform) downloadFromURL(
+func (f *ArcApiPlatform) downloadFromURL(
 	ctx context.Context,
 	dlURL, path string,
 ) error {
@@ -375,7 +375,7 @@ func (f *FallenApiPlatform) downloadFromURL(
 	return nil
 }
 
-func (f *FallenApiPlatform) downloadFromTelegram(
+func (f *ArcApiPlatform) downloadFromTelegram(
 	ctx context.Context,
 	dlURL, path string,
 	pm *telegram.ProgressManager,
