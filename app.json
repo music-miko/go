@@ -1,9 +1,9 @@
 {
-    "name": "YukkiMusic",
+    "name": "ArcMusic",
     "description": "A Telegram bot that streams music into group voice chats with seamless playback and control.",
     "keywords": ["telegram", "bot", "music", "go", "voice-chat"],
-    "repository": "https://github.com/TheTeamVivek/YukkiMusic",
-    "website": "https://github.com/TheTeamVivek/YukkiMusic",
+    "repository": "https://github.com/tusar404/ArcMusic",
+    "website": "https://github.com/tusar404/ArcMusic",
     "stack": "container",
     "env": {
         "API_ID": {
@@ -32,13 +32,13 @@
             "required": true
         },
         "FALLEN_API_KEY": {
-            "description": "API key for Fallen API (optional). You can get one from @FallenApiBot or https://beta.fallenapi.fun/. If you are using cookies, you can leave this empty.",
+            "description": "API key for Fallen API (optional). You can get one from https://deadlinetech.site . If you are using cookies, you can leave this empty.",
             "value": "",
             "required": false
         },
         "FALLEN_API_URL": {
-            "description": "Base URL for the Fallen API. For more info, visit @FallenApiBot or https://beta.fallenapi.fun/.",
-            "value": "https://beta.fallenapi.fun",
+            "description": "Base URL for the Fallen API. For more info, visit https://deadlinetech.site.",
+            "value": "https://api.deadlinetech.site",
             "required": false
         },
         "OWNER_ID": {
@@ -68,17 +68,17 @@
         },
         "START_IMG_URL": {
             "description": "URL of the image to be displayed on the start message.",
-            "value": "https://raw.githubusercontent.com/Vivekkumar-IN/assets/master/images.png",
+            "value": "https://files.catbox.moe/he87u5.jpg",
             "required": false
         },
         "SUPPORT_CHAT": {
             "description": "The URL of your support chat.",
-            "value": "https://t.me/TheTeamVk",
+            "value": "https://t.me/ArcChatz",
             "required": false
         },
         "SUPPORT_CHANNEL": {
             "description": "The URL of your support channel.",
-            "value": "https://t.me/TheTeamVivek",
+            "value": "https://t.me/ArcUpdates",
             "required": false
         },
         "COOKIES_LINK": {
