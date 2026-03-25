@@ -1,4 +1,4 @@
-# 🎮 YukkiMusic Modules & Commands System
+# 🎮 ArcMusic Modules & Commands System
 
 The **Modules System** implements all bot commands and features through a modular handler pipeline. It is responsible for parsing user input, enforcing permissions via filters, and orchestrating high-level bot behavior by interacting with the `core`, `database`, and `platforms` packages.
 
