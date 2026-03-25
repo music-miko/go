@@ -25,8 +25,8 @@ BACK_BTN: "⬅️ Back"
 # basically this string used in /command [bool]
 invalid_bool: "⚠️ <b>Invalid value.</b>\nUse 'enable' or 'disable'."
 
-active_chats_info: "📊 <b>Active Chats:</b>\n\nThere are <i>{count}</i> active chats across the bot system."
-active_chats_info_with_broken: "📊 <b>Active Chats:</b>\n\nThere are <i>{count}</i> active chats across the bot system, but <i>{broken}</i> of them may have issues displaying correctly."
+active_chats_info: "📊 <b>Active Chats:</b>\n\nThere are {count} active chats across the bot system."
+active_chats_info_with_broken: "📊 <b>Active Chats:</b>\n\nThere are {count} active chats across the bot system, but {broken} of them may have issues displaying correctly."
 
 
 # 🚫 Assistant Restricted / Banned
@@ -40,7 +40,7 @@ assistant_restricted_warning: |
 
 # 🧩 Common auth messages
 auth_no_user: "⚠️ Please provide a user — use:\n{cmd} [user_id] or reply to a user's message."
-user_extract_fail: "⚠️ Unable to get that user: <i>{error}</i>"
+user_extract_fail: "⚠️ Unable to get that user: {error}"
 auth_limit_reached: "⚠️ This chat has reached the maximum authorized users limit ({limit}). Please remove someone before adding a new one."
 already_authed: "⚠️ That user is already authorized — no need to add them again."
 
@@ -125,9 +125,9 @@ cb_resume_success: "▶️ Resumed at {position}."
 cb_resume_message: |
   <b>🎵 Now Playing:</b>
 
-  <b>▫ Track:</b> <a href="{url}">{title}</a>
-  <b>▫ Duration:</b> {duration}
-  <b>▫ Resumed by:</b> {user}
+  <b>Track:</b> <a href="{url}">{title}</a>
+  <b>Duration:</b> {duration}
+  <b>Resumed by:</b> {user}
 
 # Replay callback
 cb_replaying: "🔁 <b>Replaying current track...</b>"
@@ -150,8 +150,8 @@ cb_mute_success: "🔇 Muted."
 cb_mute_message: |
   <b>🔇 Playback Muted</b>
 
-  <b>▫ Track:</b> <a href="{url}">{title}</a>
-  <b>▫ Muted by:</b> {user}
+  <b>Track:</b> <a href="{url}">{title}</a>
+  <b>Muted by:</b> {user}
 
 cb_unmute_success: "🔊 Unmuted."
 
@@ -210,7 +210,7 @@ err_assistant_banned: |
 err_admin_permission_required: |
   ⚠️ <b>Admin Permission Required</b>
 
-  I need <i>admin access</i> to manage and check members in this chat.
+  I need admin access to manage and check members in this chat.
   
   ➤ <b>Promote me with</b> <code>Manage Chat / Invite Users</code> permission.
 
@@ -263,13 +263,13 @@ err_peer_resolve_failed: |
 err_rtmp_missing_params: |
   <b>⚠️ RTMP Details Missing</b>
 
-  <i>It looks like an <b>RTMP stream</b> is active in this chat, but you have not provided the required
-  <b>RTMP URL</b> or <b>Stream Key</b>. Without these, I cannot start streaming music to RTMP.</i>
+  It looks like an <b>RTMP stream</b> is active in this chat, but you have not provided the required
+  <b>RTMP URL</b> or <b>Stream Key</b>. Without these, I cannot start streaming music to RTMP.
 
   <b>Use:</b> <code>/setrtmp [chat_id] [url+key]</code>
 
-  <i>📌 Once the RTMP details are set, you may start streaming.</i>  
-  <i>➡️ If you do not wish to use RTMP, switch to regular voice chat instead.</i>
+  📌 Once the RTMP details are set, you may start streaming.  
+  ➡️ If you do not wish to use RTMP, switch to regular voice chat instead.
   
 err_unknown: |
   ⚠️ Unknown Error Occurred:
@@ -418,19 +418,19 @@ mute_success_with_time: |
 
   🎵 Track: {title}
   👤 Muted by: {user}
-  <i>⏳ Auto-unmute in <b>{duration}</b> seconds</i>
+  ⏳ Auto-unmute in <b>{duration}</b> seconds
 
 no_song_query: |
   <b>🎵 Whoops! No song detected.</b>
 
-  <i>Type <b>{cmd} [song name]</b> or reply to a <b>media</b> to start playing!</i>
+  Type <b>{cmd} [song name]</b> or reply to a <b>media</b> to start playing!
 
 no_song_found: "❌ No tracks found."
 
 nothumb_status: |
   🖼️ <b>Thumbnail Control</b>
   
-  <i>When enabled, playback messages won't show artwork/thumbnails.</i>
+  When enabled, playback messages won't show artwork/thumbnails.
   
   <b>📊 Usage: {cmd} [enable|disable]</b>
   
@@ -466,18 +466,18 @@ pause_success: |
 
 play_single_track_too_long: |
   ⚠️ You can't play songs longer than {limit_mins} minutes.
-  <i>{title}</i> was skipped.
+  {title} was skipped.
 
 play_download_failed: |
   ❌ Failed to download "<i>{title}</i>".
   Error: <code>{error}</code>
 
 play_added_to_queue_single: |
-  <b>🎵 Added to Queue:</b> #{index}
+  <b>Added to Queue:</b> #{index}
 
-  <b>▫ Track:</b> <a href="{url}">{title}</a>
-  <b>▫ Duration:</b> {duration}
-  <b>▫ Requested by:</b> {by}
+  <b>Track:</b> <a href="{url}">{title}</a>
+  <b>Duration:</b> {duration}
+  <b>Requested by:</b> {by}
 
 channel_play_depreciated: "⚠️ This handler is deprecated. Use <code><a>/cplay --set channel_id </code></a> to set your channel for playback."
 play_multiple_tracks_too_long_header: "<b>⚠️ {count} tracks were skipped (max duration {limit_mins} mins):</b>"
@@ -489,8 +489,8 @@ play_unable: "<b> ❌ Unable to Play </b>\n\n<i>Please <b>restart the voice</b> 
 play_downloading_song: "📥 Downloading song \"{title}\""
 play_download_canceled: "⚠️ Download canceled by {user}."
 play_added_multiple_header: "➕ <b>Added {count} tracks</b> by {user}"
-play_queue_limit_hint: "⚠️ <i>Queue limit reached — some tracks were skipped.</i>"
-play_queue_view_hint: "<i>Use /queue to view full list.</i>"
+play_queue_limit_hint: "⚠️ Queue limit reached — some tracks were skipped."
+play_queue_view_hint: "Use /queue to view full list."
 
 # 🏓 Ping messages
 ping_start: "🏓 Pinging..."
@@ -510,12 +510,12 @@ position_now: |
   ⚙️ Speed: <b>{speed}x</b>
 
 queue_limit_reached: "⚠️ Queue limit reached ({limit} tracks max). Use /clear to clear queue."
-queue_no_active: "⚠️ <b>No active playback.</b>\n\n<i>Nothing is queued right now.</i>"
+queue_no_active: "⚠️ <b>No active playback.</b>\n\nNothing is queued right now."
 queue_header: "🎶 <b>Current Queue</b>"
 queue_now_playing: "▶️ <b>Now Playing:</b>"
 queue_up_next: "⏭️ <b>Up Next:</b>"
 queue_more_line: "\n… and {remaining} more"
-queue_empty_tail: "📭 <i>No more songs in queue.</i>"
+queue_empty_tail: "📭 No more songs in queue."
 queue_empty: "⚠️ <b>The queue is already empty.</b>"
 queue_restored: "✅ Successfully restored <b>{count}</b> tracks to the queue."
 queue_restore_no_data: "❌ No cleared queue found to restore, or a new song has already been added."
@@ -736,8 +736,8 @@ rtmp_configured_success: |
   Credentials are stored securely and never shown in the group.
 
 
-searching: "🔍🎶 Searching... ⚡✨"
-searching_query: "🔍🎶 Searching for: <b>{query}</b>... ⚡✨"
+searching: "🔍 Searching..."
+searching_query: "🔍 Searching for: <b>{query}</b>..."
 
 speed_line: "⚙️ Speed: <b>{speed}x</b>"
 
@@ -886,16 +886,16 @@ start_private: "Hello {user}, My name is {bot}.\n\nI'm a telegram streaming bot 
 start_group: "<b>💫 I’m here!</b> Try a command… if you think you can handle me 😉"
 
 stream_channelid_fail: "⚠️ Failed to get your connected channel’s ID."
-stream_queue_finished: "🎵 <b>Queue Finished!</b>\n\nNo more songs to play. Use /play to add more tracks! 🎶"
+stream_queue_finished: "No more songs in the queue."
 stream_downloading_next: "📥 Downloading your next track..."
 stream_download_fail: "❌ Failed to download.\nError: <code>{error}</code>"
 stream_play_fail: "❌ Failed to play the song."
 stream_now_playing: |
   <b>🎵 Now Playing:</b>
 
-  <b>▫ Track:</b> <a href="{url}">{title}</a>
-  <b>▫ Duration:</b> {duration}
-  <b>▫ Requested by:</b> {by}
+  <b>Track:</b> <a href="{url}">{title}</a>
+  <b>Duration:</b> {duration}
+  <b>Requested by:</b> {by}
 
 # 👑 Sudo / Owner Join Messages
 sudo_join_owner: "👑 {user} — owner of {bot} — just entered the chat."
