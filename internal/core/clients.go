@@ -123,7 +123,7 @@ func initAssistants() error {
 		}
 
 		assistant.Client.SendMessage(Bot.Me().Username, "/start")
-		assistant.Client.JoinChannel("TheTeamVivek")
+		assistant.Client.JoinChannel("ArcBotz")
 
 		if assistant.Self.Username != "" {
 			gologging.InfoF(
