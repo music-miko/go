@@ -48,8 +48,8 @@ These must be set for the bot to start.
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `DEFAULT_LANG` | `en` | Default language for bot responses (see `internal/locales/`). |
-| `DURATION_LIMIT` | `4200` | Maximum track duration in seconds (70 minutes). |
-| `QUEUE_LIMIT` | `7` | Maximum number of tracks in queue per chat. |
+| `DURATION_LIMIT` | `3600` | Maximum track duration in seconds (60 minutes). |
+| `QUEUE_LIMIT` | `10` | Maximum number of tracks in queue per chat. |
 | `MAX_AUTH_USERS` | `25` | Max number of non-admin users allowed to control playback. |
 | `LEAVE_ON_DEMOTED`| `false` | If `true`, the bot leaves the group if its admin rights are removed. |
 | `SET_CMDS` | `false` | Automatically set bot commands in Telegram UI on startup. |
