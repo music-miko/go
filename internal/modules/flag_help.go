@@ -3,7 +3,6 @@
  *
  * Copyright (C) 2026 Team Arc
  */
-*/
 
 package modules
 
