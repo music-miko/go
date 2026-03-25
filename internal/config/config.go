@@ -1,18 +1,8 @@
 /*
- * ● YukkiMusic
+ * ● ArcMusic
  * ○ A high-performance engine for streaming music in Telegram voicechats.
  *
- * Copyright (C) 2026 TheTeamVivek
- *
- * This program is free software: you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * Repository: https://github.com/TheTeamVivek/YukkiMusic
+ * Copyright (C) 2026 Team Arc
  */
 
 package config
@@ -44,8 +34,8 @@ var (
 	DbURI               string
 	SpotifyClientID     string
 	SpotifyClientSecret string
-	FallenAPIURL        string
-	FallenAPIKey        string
+	ArcAPIURL           string
+	ArcAPIKey           string
 	DefaultLang         string
 	DurationLimit       int
 	LeaveOnDemoted      bool
@@ -115,17 +105,17 @@ func loadConfig() {
 	DbURI = getString("DB_URI", "")
 	SpotifyClientID = getString("SPOTIFY_CLIENT_ID", "")
 	SpotifyClientSecret = getString("SPOTIFY_CLIENT_SECRET", "")
-	FallenAPIURL = getString("FALLEN_API_URL", "https://api.deadlinetech.site")
-	FallenAPIKey = getString("FALLEN_API_KEY", "ARC96c49b834dd77e50c18ae2")
+	ArcAPIURL = getString("ARC_API_URL", "https://api.deadlinetech.site")
+	ArcAPIKey = getString("ARC_API_KEY", "ARC96c49b834dd77e50c18ae2")
 
 	DefaultLang = getString("DEFAULT_LANG", "en")
-	DurationLimit = int(getInt64("DURATION_LIMIT", 7200)) // In seconds
+	DurationLimit = int(getInt64("DURATION_LIMIT", 3600)) // In seconds
 	LeaveOnDemoted = getBool("LEAVE_ON_DEMOTED", false)
 	QueueLimit = int(getInt64("QUEUE_LIMIT", 10))
 	SupportChat = getString("SUPPORT_CHAT", "https://t.me/ArcChatz")
 	SupportChannel = getString("SUPPORT_CHANNEL", "https://t.me/ArcUpdates")
 	CookiesLink = getString("COOKIES_LINK", "")
-	SetCmds = getBool("SET_CMDS", false)
+	SetCmds = getBool("SET_CMDS", true)
 	MaxAuthUsers = int(getInt64("MAX_AUTH_USERS", 25))
 
 	StartImage = getString(
@@ -136,7 +126,7 @@ func loadConfig() {
 		"PING_IMG_URL",
 		"https://files.catbox.moe/he87u5.jpg",
 	)
-	Port = getString("PORT", "8001")
+	Port = getString("PORT", "8000")
 }
 
 func validateConfig() {
