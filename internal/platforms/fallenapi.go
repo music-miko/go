@@ -22,7 +22,6 @@ import (
 	"github.com/Laky-64/gologging"
 	"github.com/amarnathcjd/gogram/telegram"
 	
-	// Updated to use the v2 MongoDB driver to match database.go
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -60,7 +59,6 @@ func getMediaCollection() *mongo.Collection {
 		if config.DbURI == "" {
 			return
 		}
-		// v2 Connection Syntax
 		opts := options.Client().ApplyURI(config.DbURI)
 		client, err := mongo.Connect(opts)
 		if err != nil {
@@ -98,22 +96,20 @@ func (f *FallenApiPlatform) Download(
 	statusMsg *telegram.NewMessage,
 ) (string, error) {
 
-	var pm *telegram.ProgressManager
-	if statusMsg != nil {
-		pm = utils.GetProgress(statusMsg)
-	}
+	// STRICT AUDIO ONLY: Fallen api didn't support video downloads so disable it
+	track.Video = false
 
-	// 0. Check Local Cache
 	if f := findFile(track); f != "" {
 		gologging.Debug("FallenApi: Download -> Local Cached File -> " + f)
 		return f, nil
 	}
 
-	ext := ".mp3"
-	if track.Video {
-		ext = ".mp4"
+	var pm *telegram.ProgressManager
+	if statusMsg != nil {
+		pm = utils.GetProgress(statusMsg)
 	}
-	path := getPath(track, ext)
+
+	path := getPath(track, ".mp3")
 
 	// 1. Try Media DB Cache (Telegram Channel Download)
 	if dbPath, err := f.downloadFromMediaDB(ctx, track, path, pm); err == nil && dbPath != "" {
@@ -123,7 +119,7 @@ func (f *FallenApiPlatform) Download(
 
 	gologging.Debug("FallenApi: DB Miss -> Falling back to API V2 Download")
 
-	// 2. Try V2 API Polling (Optimized Download)
+	// 2. Try V2 API Polling
 	dlURL, err := f.v2Download(ctx, track)
 	if err != nil {
 		return "", err
@@ -153,7 +149,7 @@ func (*FallenApiPlatform) Search(string, bool) ([]*state.Track, error) {
 	return nil, nil
 }
 
-// --- Optimization Core: Database & API V2 ---
+// --- Database & API ---
 
 func (f *FallenApiPlatform) downloadFromMediaDB(
 	ctx context.Context,
@@ -166,23 +162,16 @@ func (f *FallenApiPlatform) downloadFromMediaDB(
 		return "", errors.New("db or media channel not configured")
 	}
 
-	ext := "mp3"
-	mediaType := "a"
-	if track.Video {
-		ext = "mp4"
-		mediaType = "v"
-	}
-
 	keys := []string{
-		fmt.Sprintf("%s.%s", track.ID, ext),
+		fmt.Sprintf("%s.mp3", track.ID),
 		track.ID,
-		fmt.Sprintf("%s_%s", track.ID, mediaType),
-		fmt.Sprintf("%s_%s.%s", track.ID, mediaType, ext),
+		fmt.Sprintf("%s_a", track.ID),
+		fmt.Sprintf("%s_a.mp3", track.ID),
 	}
 
 	filter := bson.M{
 		"track_id": bson.M{"$in": keys},
-		"isVideo":  track.Video,
+		"isVideo":  false, // Hardcoded to false for audio
 	}
 
 	var result struct {
@@ -230,11 +219,10 @@ func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) 
 	}
 
 	for cycle := 0; cycle < 5; cycle++ {
-		reqURL := fmt.Sprintf("%s/youtube/v2/download?api_key=%s&query=%s&isVideo=%t",
+		reqURL := fmt.Sprintf("%s/youtube/v2/download?api_key=%s&query=%s&isVideo=false",
 			strings.TrimRight(apiURL, "/"),
 			apiKey,
 			url.QueryEscape(query),
-			track.Video,
 		)
 
 		var respData map[string]any
@@ -266,14 +254,23 @@ func (f *FallenApiPlatform) v2Download(ctx context.Context, track *state.Track) 
 }
 
 func (f *FallenApiPlatform) extractCandidate(data map[string]any) string {
+	if job, ok := data["job"].(map[string]any); ok {
+		if res, ok := job["result"].(map[string]any); ok {
+			for _, k := range []string{"public_url", "cdnurl", "download_url", "url"} {
+				if v, ok := res[k].(string); ok && strings.TrimSpace(v) != "" {
+					return strings.TrimSpace(v)
+				}
+			}
+		}
+	}
 	if res, ok := data["result"].(map[string]any); ok {
-		for _, k := range []string{"cdnurl", "public_url", "download_url", "url"} {
+		for _, k := range []string{"public_url", "cdnurl", "download_url", "url"} {
 			if v, ok := res[k].(string); ok && strings.TrimSpace(v) != "" {
 				return strings.TrimSpace(v)
 			}
 		}
 	}
-	for _, k := range []string{"cdnurl", "public_url", "download_url", "url", "tg_link"} {
+	for _, k := range []string{"public_url", "cdnurl", "download_url", "url", "tg_link"} {
 		if v, ok := data[k].(string); ok && strings.TrimSpace(v) != "" {
 			return strings.TrimSpace(v)
 		}
@@ -296,7 +293,7 @@ func (f *FallenApiPlatform) extractJobID(data map[string]any) string {
 func (f *FallenApiPlatform) pollJobStatus(ctx context.Context, jobID string) string {
 	apiURL := config.FallenAPIURL
 	apiKey := config.FallenAPIKey
-	interval := 2.0 // seconds
+	interval := 2.0 
 
 	for attempt := 0; attempt < 10; attempt++ {
 		time.Sleep(time.Duration(interval * float64(time.Second)))
@@ -313,7 +310,7 @@ func (f *FallenApiPlatform) pollJobStatus(ctx context.Context, jobID string) str
 				return cand
 			}
 		}
-		interval *= 1.2 // Exponential backoff
+		interval *= 1.2 
 	}
 	return ""
 }
@@ -327,8 +324,6 @@ func (f *FallenApiPlatform) normalizeURL(candidate, apiURL string) string {
 	}
 	return strings.TrimRight(apiURL, "/") + "/" + candidate
 }
-
-// --- Standard HTTP & Telegram Downloader Base ---
 
 func (f *FallenApiPlatform) downloadFromURL(
 	ctx context.Context,
