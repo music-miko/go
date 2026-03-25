@@ -20,15 +20,13 @@ func init() {
 <b>/active</b> or <b>/ac</b> — List active chats
 
 <b>📊 Information Shown:</b>
-• Total active chats
-• Active NTGCalls connections
-• Broken/stale sessions
+• Total active voice chats
 
 <b>🔒 Restrictions:</b>
 • <b>Sudo users</b> only
 
 <b>💡 Use Case:</b>
-Monitor bot usage and identify issues.`
+Monitor exact bot usage.`
 
 	keys := []string{"/ac", "/activevc", "/activevoice"}
 	for _, k := range keys {
@@ -39,11 +37,10 @@ Monitor bot usage and identify issues.`
 func activeHandler(m *telegram.NewMessage) error {
 	chatID := m.ChannelID()
 
-	allRooms := core.GetAllRooms()
-	activeCount := len(allRooms)
-
+	// Map to store unique, currently active voice chat connections
 	ntgChats := make(map[int64]struct{})
 
+	// Iterate through assistants and only count actual live NTG calls
 	core.Assistants.ForEach(func(a *core.Assistant) {
 		if a == nil || a.Ntg == nil {
 			return
@@ -53,23 +50,13 @@ func activeHandler(m *telegram.NewMessage) error {
 		}
 	})
 
-	brokenCount := 0
-	for id := range allRooms {
-		if _, ok := ntgChats[id]; !ok {
-			brokenCount++
-		}
-	}
+	// The exact number of active voice chats
+	activeCount := len(ntgChats)
 
+	// Send the exact count without the broken/stale logic
 	msg := F(chatID, "active_chats_info", locales.Arg{
 		"count": activeCount,
 	})
-
-	if brokenCount > 0 {
-		msg = F(chatID, "active_chats_info_with_broken", locales.Arg{
-			"count":  activeCount,
-			"broken": brokenCount,
-		})
-	}
 
 	m.Reply(msg)
 	return telegram.ErrEndGroup
