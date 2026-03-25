@@ -18,7 +18,7 @@
 
 ## 🌟 Overview
 
-The **Platform System** is the engine driving YukkiMusic's music fetching and downloading. Each platform is a self-contained module designed for a specific source.
+The **Platform System** is the engine driving ArcMusic's music fetching and downloading. Each platform is a self-contained module designed for a specific source.
 
 ### Key Capabilities:
 - ✅ **Validation**: Smartly determines if a query/URL belongs to the platform.
