@@ -11,8 +11,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -170,106 +168,16 @@ func (p *YouTubePlatform) handleTrackURL(
 	return nil, errors.New("track not found")
 }
 
-// Enable downloading natively for youtube so that it falls back to yt-dlp here if FallenAPI misses.
 func (p *YouTubePlatform) CanDownload(source state.PlatformName) bool {
-	return source == PlatformYouTube
+	return false
 }
 
-// Strict Firewall logic ported from Youtube.py
-func isSafeURL(text string) bool {
-	dangerousChars := []string{";", "|", "$", "`", "\n", "\r", "(", ")", "<", ">", "{", "}", "\\", "'", "\""}
-
-	text = strings.TrimSpace(text)
-	lowerText := strings.ToLower(text)
-	isURL := strings.HasPrefix(lowerText, "http:") || strings.HasPrefix(lowerText, "https:") || strings.HasPrefix(lowerText, "www.")
-
-	if !isURL {
-		decoded, err := url.PathUnescape(text)
-		if err == nil {
-			for _, char := range dangerousChars {
-				if strings.Contains(decoded, char) {
-					return false
-				}
-			}
-		}
-		return true
-	}
-
-	targetURL := text
-	if strings.HasPrefix(lowerText, "www.") {
-		targetURL = "https://" + targetURL
-	}
-
-	decodedURL, err := url.QueryUnescape(targetURL)
-	if err != nil {
-		return false
-	}
-
-	for _, char := range dangerousChars {
-		if strings.Contains(decodedURL, char) {
-			return false
-		}
-	}
-
-	parsed, err := url.Parse(targetURL)
-	if err != nil {
-		return false
-	}
-
-	domain := strings.ReplaceAll(parsed.Host, "www.", "")
-	allowedDomains := map[string]bool{
-		"youtube.com": true, "m.youtube.com": true, "youtu.be": true, "music.youtube.com": true,
-	}
-
-	return allowedDomains[domain]
-}
-
-// Download natively via yt-dlp if FallenApi misses (acts as the ultimate fallback layer)
 func (p *YouTubePlatform) Download(
-	ctx context.Context,
-	track *state.Track,
+	_ context.Context,
+	_ *state.Track,
 	_ *telegram.NewMessage,
 ) (string, error) {
-
-	if !isSafeURL(track.URL) {
-		return "", errors.New("blocked by security firewall: URL rejected")
-	}
-
-	if f := findFile(track); f != "" {
-		gologging.Debug("YouTube: Download -> Local Cached File -> " + f)
-		return f, nil
-	}
-
-	ext := ".mp3"
-	format := "bestaudio/best"
-	if track.Video {
-		ext = ".mp4"
-		format = "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio[ext=m4a])"
-	}
-
-	path := getPath(track, ext)
-
-	cmdArgs := []string{
-		"-f", format,
-		"--geo-bypass", "--nocheckcertificate", "--quiet", "--no-warnings",
-		"-o", path,
-		track.URL,
-	}
-
-	gologging.Info(fmt.Sprintf("⚠️ YT-DLP DL FALLBACK | %s", track.URL))
-
-	cmd := exec.CommandContext(ctx, "yt-dlp", cmdArgs...)
-	out, err := cmd.CombinedOutput()
-
-	if err != nil {
-		return "", fmt.Errorf("yt-dlp fallback failed: %v, output: %s", err, string(out))
-	}
-
-	if !fileExists(path) {
-		return "", errors.New("yt-dlp command executed but file was not produced")
-	}
-
-	return path, nil
+	return "", errors.New("youtube platform does not support downloading natively")
 }
 
 func (*YouTubePlatform) CanSearch() bool { return true }
