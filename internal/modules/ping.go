@@ -1,18 +1,7 @@
 /*
- * ● YukkiMusic
  * ○ A high-performance engine for streaming music in Telegram voicechats.
  *
- * Copyright (C) 2026 TheTeamVivek
- *
- * This program is free software: you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * Repository: https://github.com/TheTeamVivek/YukkiMusic
+ * Copyright (C) 2026 Team Arc
  */
 
 package modules
@@ -47,17 +36,14 @@ func init() {
 • Disk usage
 
 <b>💡 Use Case:</b>
-Check if bot is responsive and view system health.`
+Check if the bot is alive and how the server is performing.`
 }
 
 func formatUptime(d time.Duration) string {
-	days := d / (24 * time.Hour)
-	d -= days * 24 * time.Hour
-	hours := d / time.Hour
-	d -= hours * time.Hour
-	minutes := d / time.Minute
-	d -= minutes * time.Minute
-	seconds := d / time.Second
+	days := int(d.Hours() / 24)
+	hours := int(d.Hours()) % 24
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
 
 	result := ""
 	if days > 0 {
@@ -103,10 +89,7 @@ func pingHandler(m *tg.NewMessage) error {
 
 	v, err := mem.VirtualMemory()
 	if err == nil {
-		usedGB := float64(v.Used) / 1024 / 1024 / 1024
-		totalGB := float64(v.Total) / 1024 / 1024 / 1024
-
-		ramInfo = fmt.Sprintf("%.2f / %.2f GB", usedGB, totalGB)
+		ramInfo = fmt.Sprintf("%.2f%%", v.UsedPercent)
 	}
 
 	if percentages, err := cpu.Percent(time.Second, false); err == nil &&
@@ -114,21 +97,19 @@ func pingHandler(m *tg.NewMessage) error {
 		cpuUsage = fmt.Sprintf("%.2f%%", percentages[0])
 	}
 
-	if d, err := disk.Usage("/"); err == nil {
-		usedGB := float64(d.Used) / 1024 / 1024 / 1024
-		totalGB := float64(d.Total) / 1024 / 1024 / 1024
-		diskUsage = fmt.Sprintf("%.2f / %.2f GB", usedGB, totalGB)
+	d, err := disk.Usage("/")
+	if err == nil {
+		diskUsage = fmt.Sprintf("%.2f%%", d.UsedPercent)
 	}
 
-	msg := F(m.ChannelID(), "ping_result", locales.Arg{
-		"latency":    latency,
-		"bot":        utils.MentionHTML(m.Client.Me()),
-		"uptime":     uptimeStr,
-		"ram_info":   ramInfo,
-		"cpu_usage":  cpuUsage,
-		"disk_usage": diskUsage,
+	pingText := F(m.ChannelID(), "ping_details", locales.Arg{
+		"latency": utils.IntToStr(int(latency)),
+		"uptime":  uptimeStr,
+		"cpu":     cpuUsage,
+		"ram":     ramInfo,
+		"disk":    diskUsage,
 	})
 
-	reply.Edit(msg, opt)
+	utils.EOR(reply, pingText, opt)
 	return tg.ErrEndGroup
 }
