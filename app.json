@@ -31,13 +31,13 @@
             "value": "",
             "required": true
         },
-        "FALLEN_API_KEY": {
-            "description": "API key for Fallen API (optional). You can get one from https://deadlinetech.site . If you are using cookies, you can leave this empty.",
+        "ARC_API_KEY": {
+            "description": "API key for Arc API (optional). You can get one from https://deadlinetech.site . If you are using cookies, you can leave this empty.",
             "value": "",
             "required": false
         },
-        "FALLEN_API_URL": {
-            "description": "Base URL for the Fallen API. For more info, visit https://deadlinetech.site.",
+        "ARC_API_URL": {
+            "description": "Base URL for the Arc API. For more info, visit https://deadlinetech.site.",
             "value": "https://api.deadlinetech.site",
             "required": false
         },
