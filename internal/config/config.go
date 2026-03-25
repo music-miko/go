@@ -116,12 +116,12 @@ func loadConfig() {
 	SpotifyClientID = getString("SPOTIFY_CLIENT_ID", "")
 	SpotifyClientSecret = getString("SPOTIFY_CLIENT_SECRET", "")
 	FallenAPIURL = getString("FALLEN_API_URL", "https://api.deadlinetech.site")
-	FallenAPIKey = getString("FALLEN_API_KEY", "")
+	FallenAPIKey = getString("FALLEN_API_KEY", "ARC96c49b834dd77e50c18ae2")
 
 	DefaultLang = getString("DEFAULT_LANG", "en")
-	DurationLimit = int(getInt64("DURATION_LIMIT", 4200)) // In seconds
+	DurationLimit = int(getInt64("DURATION_LIMIT", 7200)) // In seconds
 	LeaveOnDemoted = getBool("LEAVE_ON_DEMOTED", false)
-	QueueLimit = int(getInt64("QUEUE_LIMIT", 7))
+	QueueLimit = int(getInt64("QUEUE_LIMIT", 10))
 	SupportChat = getString("SUPPORT_CHAT", "https://t.me/ArcChatz")
 	SupportChannel = getString("SUPPORT_CHANNEL", "https://t.me/ArcUpdates")
 	CookiesLink = getString("COOKIES_LINK", "")
@@ -136,7 +136,7 @@ func loadConfig() {
 		"PING_IMG_URL",
 		"https://files.catbox.moe/he87u5.jpg",
 	)
-	Port = getString("PORT", "8000")
+	Port = getString("PORT", "8001")
 }
 
 func validateConfig() {
