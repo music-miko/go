@@ -1,4 +1,4 @@
-# 🎼 YukkiMusic Platform System
+# 🎼 ArcMusic Platform System
 
 > **A modular, extensible, and priority-based framework for music source integration.**
 
@@ -63,10 +63,10 @@ Powerful metadata resolver and search engine.
 Native support for SoundCloud tracks and playlists via `yt-dlp`.
 - **Features**: High-quality audio extraction and cookie support.
 
-### ⚡ Fallen API (Priority: 80)
+### ⚡ Arc API (Priority: 80)
 Premium, high-speed API for YouTube audio downloads.
-- **Features**: Stable performance and Telegram CDN integration.
-- **Configuration**: Requires `FALLEN_API_URL` and `FALLEN_API_KEY`.
+- **Features**: Stable performance and CDN URL integration.
+- **Configuration**: Requires `ARC_API_URL` and `ARC_API_KEY`.
 
 ### 🔗 DirectStream (Priority: 65)
 Fallback for direct media URLs (`.mp3`, `.mp4`, `.m3u8`, etc.).
@@ -88,7 +88,7 @@ The ultimate universal fallback downloader.
 | **95** | **Spotify** | Premium metadata matching |
 | **90** | **YouTube** | Global search & metadata |
 | **85** | **SoundCloud** | Native indie music support |
-| **80** | **Fallen API** | Optimized audio downloads |
+| **80** | **Arc API** | Optimized audio downloads |
 | **65** | **DirectStream** | Direct URLs & HLS streams |
 | **60** | **YT-DLP** | Universal compatibility layer |
 
@@ -108,7 +108,7 @@ The ultimate universal fallback downloader.
    - Checked by Telegram (100) → ❌
    - ...
    - Checked by **YouTube (90)** → ✅ **Metadata Resolved!**
-   - Download phase → Uses **Fallen API (80)** or **YT-DLP (60)**.
+   - Download phase → Uses **Arc API (80)** or **YT-DLP (60)**.
 
 ---
 
@@ -186,7 +186,7 @@ type Track struct {
 
 - **Core Logic**: Adapted from various open-source music bots.
 - **Search**: YouTube scraping logic inspired by [TgMusicBot](https://github.com/AshokShau/TgMusicBot).
-- **Support**: Join our [Support Group](https://t.me/TheTeamVk) for integration help.
+- **Support**: Join our [Support Group](https://t.me/ArcChatz) for integration help.
 
 ---
 **Happy Coding! 🎼**
