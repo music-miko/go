@@ -61,8 +61,8 @@ These must be set for the bot to start.
 | :--- | :--- | :--- |
 | `START_IMG_URL` | `https://...` | Image URL displayed in the `/start` command response. |
 | `PING_IMG_URL` | `https://...` | Image URL displayed in the `/ping` command response. |
-| `SUPPORT_CHAT` | `https://t.me/TheTeamVk` | **Full URL** to the support group. |
-| `SUPPORT_CHANNEL`| `https://t.me/TheTeamVivek` | **Full URL** to the announcement channel. |
+| `SUPPORT_CHAT` | `https://t.me/ArcChatz` | **Full URL** to the support group. |
+| `SUPPORT_CHANNEL`| `https://t.me/ArcUpdates` | **Full URL** to the announcement channel. |
 
 ## 🖥️ System Settings
 
