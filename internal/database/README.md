@@ -1,6 +1,6 @@
-# 💾 YukkiMusic Database System
+# 💾 ArcMusic Database System
 
-> **MongoDB-based Data Management for YukkiMusic**
+> **MongoDB-based Data Management for ArcMusic**
 
 ---
 
@@ -19,7 +19,7 @@
 
 ## 🌟 Overview
 
-The **Database System** manages all persistent data for YukkiMusic using MongoDB.
+The **Database System** manages all persistent data for ArcMusic using MongoDB.
 
 **Location**: `internal/database/`
 
@@ -493,8 +493,8 @@ database.SetMaintenance(true, "reason")
 ## 🆘 Support
 
 - **Issues?** Use `/bug` command
-- **Help needed?** Join [Support Chat](https://t.me/TheTeamVk)
-- **Report bug?** [GitHub Issues](https://github.com/TheTeamVivek/YukkiMusic/issues)
+- **Help needed?** Join [Support Chat](https://t.me/ArcChatz)
+- **Report bug?** [GitHub Issues](https://github.com/tusar404/ArcMusic/issues)
 
 ---
 
