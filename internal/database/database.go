@@ -48,7 +48,7 @@ func Init(mongoURL string) (func(), error) {
 
 	logger.Debug("Successfully connected to MongoDB.")
 
-	database = client.Database("arc")
+	database = client.Database("ArcMusic")
 	settingsColl = database.Collection("bot_settings")
 	chatSettingsColl = database.Collection("chat_settings")
 
