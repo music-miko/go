@@ -105,8 +105,8 @@ func pingHandler(m *tg.NewMessage) error {
 	pingText := F(m.ChannelID(), "ping_details", locales.Arg{
 		"latency": utils.IntToStr(int(latency)),
 		"uptime":  uptimeStr,
-		"cpu_usage":     cpuUsage,
 		"ram_info":     ramInfo,
+		"cpu_usage":     cpuUsage,
 		"disk_usage":    diskUsage,
 	})
 
