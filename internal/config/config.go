@@ -109,9 +109,9 @@ func loadConfig() {
 	ArcAPIKey = getString("ARC_API_KEY", "ARC96c49b834dd77e50c18ae2")
 
 	DefaultLang = getString("DEFAULT_LANG", "en")
-	DurationLimit = int(getInt64("DURATION_LIMIT", 3600)) // In seconds
+	DurationLimit = int(getInt64("DURATION_LIMIT", 14400)) // In seconds
 	LeaveOnDemoted = getBool("LEAVE_ON_DEMOTED", false)
-	QueueLimit = int(getInt64("QUEUE_LIMIT", 10))
+	QueueLimit = int(getInt64("QUEUE_LIMIT", 25))
 	SupportChat = getString("SUPPORT_CHAT", "https://t.me/ArcChatz")
 	SupportChannel = getString("SUPPORT_CHANNEL", "https://t.me/ArcUpdates")
 	CookiesLink = getString("COOKIES_LINK", "")
