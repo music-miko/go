@@ -52,42 +52,33 @@ func startHandler(m *tg.NewMessage) error {
 			"bot":  utils.MentionHTML(m.Client.Me()),
 		})
 
-		// Use SendOptions to support both the WebPage media and the EffectID
-		sendOpt := &tg.SendOptions{
+		_, err := m.RespondMedia(&tg.InputMediaWebPage{
+			URL:             config.StartImage,
+			ForceLargeMedia: true,
+		}, &tg.MediaOptions{
+			Caption:     caption,
 			NoForwards:  true,
 			ReplyMarkup: core.GetStartMarkup(m.ChannelID()),
-			EffectID:    5104841245755180586, // ❤️ Heart Effect ID
-		}
-
-		if config.StartImage != "" {
-			sendOpt.Media = &tg.InputMediaWebPage{
-				URL:             config.StartImage,
-				ForceLargeMedia: true,
-			}
-		}
-
-		_, err := m.Respond(caption, sendOpt)
-		
+		})
 		if err != nil {
 			gologging.Error(
-				"[start] WebPage Reply failed: " + err.Error(),
+				"[start] InputMediaWebPage Reply failed: " + err.Error(),
 			)
 
-			// Fallback: Try RespondMedia without EffectID to satisfy the compiler
 			_, err = m.RespondMedia(config.StartImage, &tg.MediaOptions{
 				Caption:     caption,
 				NoForwards:  true,
 				ReplyMarkup: core.GetStartMarkup(m.ChannelID()),
 			})
-			
 			if err != nil {
 				gologging.Error(
-					"[start] Fallback URL media reply failed: " + err.Error(),
+					"[start] URL media reply failed: " + err.Error(),
 				)
 
-				// Ultimate fallback: Just send text and the effect
-				sendOpt.Media = nil
-				_, err = m.Respond(caption, sendOpt)
+				_, err = m.Respond(caption, &tg.SendOptions{
+					NoForwards:  true,
+					ReplyMarkup: core.GetStartMarkup(m.ChannelID()),
+				})
 				return err
 			}
 		}
