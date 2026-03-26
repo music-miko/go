@@ -92,10 +92,7 @@ func pingHandler(m *tg.NewMessage) error {
 
 	v, err := mem.VirtualMemory()
 	if err == nil {
-		usedGB := float64(v.Used) / 1024 / 1024 / 1024
-		totalGB := float64(v.Total) / 1024 / 1024 / 1024
-
-		ramInfo = fmt.Sprintf("%.2f / %.2f GB", usedGB, totalGB)
+		ramInfo = fmt.Sprintf("%.2f%%", v.UsedPercent)
 	}
 
 	if percentages, err := cpu.Percent(time.Second, false); err == nil &&
@@ -104,9 +101,7 @@ func pingHandler(m *tg.NewMessage) error {
 	}
 
 	if d, err := disk.Usage("/"); err == nil {
-		usedGB := float64(d.Used) / 1024 / 1024 / 1024
-		totalGB := float64(d.Total) / 1024 / 1024 / 1024
-		diskUsage = fmt.Sprintf("%.2f / %.2f GB", usedGB, totalGB)
+		diskUsage = fmt.Sprintf("%.2f%%", d.UsedPercent)
 	}
 
 	msg := F(m.ChannelID(), "ping_result", locales.Arg{
