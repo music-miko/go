@@ -106,7 +106,7 @@ func loadConfig() {
 	SpotifyClientID = getString("SPOTIFY_CLIENT_ID", "")
 	SpotifyClientSecret = getString("SPOTIFY_CLIENT_SECRET", "")
 	ArcAPIURL = getString("ARC_API_URL", "https://api.deadlinetech.site")
-	ArcAPIKey = getString("ARC_API_KEY", "ARC96c49b834dd77e50c18ae2")
+	ArcAPIKey = getString("ARC_API_KEY", "")
 
 	DefaultLang = getString("DEFAULT_LANG", "en")
 	DurationLimit = int(getInt64("DURATION_LIMIT", 14400)) // In seconds
