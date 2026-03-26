@@ -25,12 +25,12 @@ import (
 var (
 	autoLeaveMu      sync.Mutex
 	autoLeaveRunning bool
-	limit            = 50
+	limit            = 150 // Clean up to 150 groups daily per client
 )
 
 func init() {
 	helpTexts["autoleave"] = fmt.Sprintf(
-		`<i>Automatically makes the assistant leave inactive or unnecessary chats every 4 hours.</i>
+		`<i>Automatically makes the assistant leave inactive or unnecessary chats every day at 4:35 AM (IST).</i>
 
 <u>Usage:</u>
 <b>/autoleave </b>— Shows current auto-leave status (enabled/disabled).  
@@ -38,7 +38,7 @@ func init() {
 <b>/autoleave disable</b> — Disable auto-leave mode.
 
 <b>🧠 Details:</b>
-Once enabled, the bot checks all joined groups/channels every <b>4 hours</b> and leaves up to <b>%d chats per cycle</b> that are not in the active room  list.
+Once enabled, the bot checks all joined groups/channels every day at <b>4:35 AM IST</b> and leaves up to <b>%d chats per cycle</b> that are not in the active room list.
 
 <b>⚠️ Restrictions:</b>
 This command can only be used by <b>owners</b> or <b>sudo users</b>.`,
@@ -111,8 +111,12 @@ func startAutoLeave() {
 	autoLeaveRunning = true
 	autoLeaveMu.Unlock()
 
-	ticker := time.NewTicker(240 * time.Minute)
-	defer ticker.Stop()
+	// Load India Standard Time (Asia/Kolkata) timezone
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		// Fallback to manual IST offset if tzdata is missing from the system (UTC + 5:30)
+		loc = time.FixedZone("IST", 5*3600+1800)
+	}
 
 	for {
 		autoLeaveMu.Lock()
@@ -122,15 +126,44 @@ func startAutoLeave() {
 		}
 		autoLeaveMu.Unlock()
 
+		// Get current time in IST
+		now := time.Now().In(loc)
+		
+		// Set target time to exactly 4:35 AM IST for today
+		next := time.Date(now.Year(), now.Month(), now.Day(), 4, 35, 0, 0, loc)
+		
+		// If it's already past 4:35 AM IST today, schedule for 4:35 AM IST tomorrow
+		if !now.Before(next) {
+			next = next.Add(24 * time.Hour)
+		}
+		
+		// Calculate precise duration to sleep relative to actual absolute time
+		sleepDuration := next.Sub(time.Now())
+
+		// Sleep until the exact target time
+		time.Sleep(sleepDuration)
+
+		// Check again if the feature was disabled while we were sleeping
+		autoLeaveMu.Lock()
+		if !autoLeaveRunning {
+			autoLeaveMu.Unlock()
+			return
+		}
+		autoLeaveMu.Unlock()
+
 		activeRooms := core.GetAllRooms()
+		
+		// Run cleanup concurrently for all assistants
 		core.Assistants.ForEach(func(a *core.Assistant) {
 			if a == nil || a.Client == nil {
 				return
 			}
 			go autoLeaveAssistant(a, activeRooms)
 		})
-
-		<-ticker.C
+		
+		// Sleep for an extra minute to ensure we don't accidentally re-trigger 
+		// on the exact same minute if processing finishes extremely fast
+		time.Sleep(1 * time.Minute)
 	}
 }
 
@@ -181,8 +214,10 @@ func autoLeaveAssistant(
 			ass.Index, chatID, leaveCount, limit,
 		)
 
+		// 3 second delay between leaving groups to avoid strict floodwaits
 		time.Sleep(3 * time.Second)
 
+		// Stop once we hit the daily limit per client
 		if leaveCount >= limit {
 			return tg.ErrStopIteration
 		}
