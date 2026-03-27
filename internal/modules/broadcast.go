@@ -10,9 +10,9 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/Laky-64/gologging"
@@ -33,6 +33,8 @@ type BroadcastManager struct {
 }
 
 var bManager = &BroadcastManager{}
+
+const defaultDelay = 0.7
 
 // TryStart attempts to start a new broadcast. It returns true if successful,
 // or false if a broadcast is already running.
@@ -71,51 +73,59 @@ func (bm *BroadcastManager) IsActive() bool {
 }
 
 type BroadcastStats struct {
-	TotalChats  int32
-	TotalUsers  int32
-	DoneChats   int32
-	DoneUsers   int32
-	FailedChats int32
-	FailedUsers int32
+	TotalChats  int
+	TotalUsers  int
+	DoneChats   int
+	DoneUsers   int
+	FailedChats []int64
+	FailedUsers []int64
+	Delay       float64
 	StartTime   time.Time
-	Finished    atomic.Bool
+	LastUpdate  time.Time
+	Finished    bool
+	mu          sync.Mutex
 }
 
 type BroadcastFlags struct {
-	Chats   bool
-	Users   bool
-	All     bool
-	Forward bool
-}
-
-type broadcastJob struct {
-	TargetID int64
-	IsChat   bool
+	NoChat  bool
+	NoUser  bool
+	Copy    bool
+	Limit   int
+	Delay   float64
+	Pin     bool
+	PinLoud bool
 }
 
 func init() {
-	helpTexts["broadcast"] = `<i>High-performance broadcast to served chats and users.</i>
+	helpTexts["broadcast"] = `<i>Broadcast a message to all served chats and users.</i>
 
 <u>Usage:</u>
 <b>/broadcast [flags] [text] </b> — Broadcast text message.
 <b>/broadcast [flags] [reply to message]</b> — Broadcast the replied message.
+<b>/broadcast -cancel</b> — Cancel ongoing broadcast.
 
 <blockquote>
 <b>📋 Flags:</b>
-• <code>-all</code> — Broadcast to both chats and users (Default)
-• <code>-chats</code> — Broadcast to groups/chats only
-• <code>-users</code> — Broadcast to users only
-• <code>-forward</code> — Forward message with author tag (Default is Copy mode)
-• <code>-cancel</code> - Cancel an ongoing broadcast
+• <code>--nochat</code> — Exclude groups from broadcast
+• <code>--nouser</code> — Exclude users from broadcast
+• <code>--copy</code> — Remove forwarded tag, when broadcasting a replied message (copy mode)
+• <code>--limit [n]</code> — Limit total messages sent (default: 0 = no limit)
+• <code>--delay [seconds]</code> — Delay between messages (default: 1.5s)
+• <code>--pin</code> — Pin the message (silent)
+• <code>--pinloud</code> — Pin the message (with notification)
+
+• <code>-cancel</code> - Cancel a ongoing broadcast.
 </blockquote>
 <blockquote>
 <b>📌 Examples:</b>
-/broadcast -chats Important announcement
-/broadcast -users -forward [reply to message]
+/broadcast -nochat -delay 2 Important announcement
+/broadcast -copy -nochat -pin [reply to message]
+/broadcast -limit 10 -delay 3 Limited broadcast
 </blockquote>
 <b>⚠️ Notes:</b>
 • Only the <b>owner</b> can use this command
-• Optimized to handle 260K+ targets in under 3 hours safely.
+• After every 30 messages, there's an automatic 7.5s pause
+• You can cancel ongoing broadcasts using the inline button or <code>/broadcast -cancel</code>
 • Only one broadcast can run at a time`
 
 	helpTexts["gcast"] = helpTexts["broadcast"]
@@ -123,10 +133,9 @@ func init() {
 }
 
 func broadcastHandler(m *tg.NewMessage) error {
+	// Check for cancel flag
 	text := strings.ToLower(m.Text())
 	chatID := m.ChannelID()
-
-	// Check for cancel flag
 	if strings.Contains(text, "-cancel") || strings.Contains(text, "--cancel") {
 		return handleBroadcastCancel(m)
 	}
@@ -153,25 +162,22 @@ func broadcastHandler(m *tg.NewMessage) error {
 		return tg.ErrEndGroup
 	}
 
-	// If no specific target flag is set, default to All
-	if !flags.Chats && !flags.Users && !flags.All {
-		flags.All = true
-	}
-
+	// Get served chats and users
 	var servedChats, servedUsers []int64
 	var servedChatErr, servedUserErr error
 
-	if flags.All || flags.Chats {
+	if !flags.NoChat {
 		servedChats, servedChatErr = database.ServedChats()
 		if servedChatErr != nil {
 			m.Reply(F(chatID, "broadcast_fetch_chats_failed", locales.Arg{
 				"error": html.EscapeString(servedChatErr.Error()),
 			}))
+
 			return tg.ErrEndGroup
 		}
 	}
 
-	if flags.All || flags.Users {
+	if !flags.NoUser {
 		servedUsers, servedUserErr = database.ServedUsers()
 		if servedUserErr != nil {
 			m.Reply(F(chatID, "broadcast_fetch_users_failed", locales.Arg{
@@ -181,17 +187,36 @@ func broadcastHandler(m *tg.NewMessage) error {
 		}
 	}
 
+	// Check if there are any targets
 	if len(servedChats) == 0 && len(servedUsers) == 0 {
 		m.Reply(F(chatID, "broadcast_no_targets"))
 		return tg.ErrEndGroup
 	}
 
-	stats := &BroadcastStats{
-		TotalChats: int32(len(servedChats)),
-		TotalUsers: int32(len(servedUsers)),
-		StartTime:  time.Now(),
+	// Apply limit if specified
+	totalTargets := len(servedChats) + len(servedUsers)
+	if flags.Limit > 0 && totalTargets > flags.Limit {
+		if len(servedChats) >= flags.Limit {
+			servedChats = servedChats[:flags.Limit]
+			servedUsers = nil
+		} else {
+			remaining := flags.Limit - len(servedChats)
+			if len(servedUsers) > remaining {
+				servedUsers = servedUsers[:remaining]
+			}
+		}
 	}
-	stats.Finished.Store(false)
+
+	now := time.Now()
+	stats := &BroadcastStats{
+		TotalChats:  len(servedChats),
+		TotalUsers:  len(servedUsers),
+		Delay:       flags.Delay,
+		StartTime:   now,
+		LastUpdate:  now,
+		FailedChats: make([]int64, 0),
+		FailedUsers: make([]int64, 0),
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	if !bManager.TryStart(ctx, cancel) {
@@ -209,10 +234,10 @@ func broadcastHandler(m *tg.NewMessage) error {
 		return tg.ErrEndGroup
 	}
 
-	// Start progress updater
+	// Start progress updater in goroutine
 	go bManager.updateProgress(ctx, progressMsg, stats)
 
-	// Start highly concurrent broadcast process
+	// Start broadcast in goroutine
 	go bManager.start(
 		ctx,
 		m,
@@ -228,7 +253,9 @@ func broadcastHandler(m *tg.NewMessage) error {
 }
 
 func parseBroadcastCommand(m *tg.NewMessage) (*BroadcastFlags, string, error) {
-	flags := &BroadcastFlags{}
+	flags := &BroadcastFlags{
+		Delay: defaultDelay,
+	}
 
 	text := strings.TrimSpace(m.Text())
 	text = strings.TrimPrefix(text, m.GetCommand())
@@ -244,17 +271,46 @@ func parseBroadcastCommand(m *tg.NewMessage) (*BroadcastFlags, string, error) {
 
 	for i := 0; i < len(words); i++ {
 		word := strings.ToLower(words[i])
-		switch word {
-		case "-chats", "--chats":
-			flags.Chats = true
-		case "-users", "--users":
-			flags.Users = true
-		case "-all", "--all":
-			flags.All = true
-		case "-forward", "--forward":
-			flags.Forward = true
-		case "-cancel", "--cancel":
-			continue // Handled earlier
+		switch {
+		case word == "-nochat" || word == "--nochat":
+			flags.NoChat = true
+		case word == "-nouser" || word == "--nouser":
+			flags.NoUser = true
+		case word == "-copy" || word == "--copy":
+			flags.Copy = true
+		case word == "-pin" || word == "--pin":
+			flags.Pin = true
+		case word == "-pinloud" || word == "--pinloud":
+			flags.PinLoud = true
+		case word == "-limit" || word == "--limit":
+			if i+1 >= len(words) {
+				return nil, "", fmt.Errorf("%s requires a value", words[i])
+			}
+			limit, err := strconv.Atoi(words[i+1])
+			if err != nil || limit < 0 {
+				return nil, "", fmt.Errorf(
+					"invalid limit value: %s",
+					words[i+1],
+				)
+			}
+			flags.Limit = limit
+			i++
+		case word == "-delay" || word == "--delay":
+			if i+1 >= len(words) {
+				return nil, "", fmt.Errorf("%s requires a value", words[i])
+			}
+			delay, err := strconv.ParseFloat(words[i+1], 64)
+			if err != nil || delay < 0 {
+				return nil, "", fmt.Errorf(
+					"invalid delay value: %s",
+					words[i+1],
+				)
+			}
+			flags.Delay = delay
+			i++
+		case word == "-cancel" || word == "--cancel":
+			// Handled by the caller
+			continue
 		default:
 			contentWords = append(contentWords, words[i])
 		}
@@ -288,82 +344,61 @@ func (bm *BroadcastManager) start(
 		}
 	}()
 
-	// Buffered channel for jobs
-	jobs := make(chan broadcastJob, 5000)
-	
-	// Max workers: 25 (Telegram broadcast limit is ~30/s, so 25 is safe)
-	const numWorkers = 25
-	var wg sync.WaitGroup
+	messagesSent := 0
 
-	// Global Rate Limiter: strictly caps throughput to 25 msgs/s to ensure stability.
-	// This prevents massive flood waits and memory spikes.
-	rateLimiter := time.NewTicker(time.Second / numWorkers)
-	defer rateLimiter.Stop()
-
-	// Spawn workers
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go bm.worker(ctx, &wg, jobs, rateLimiter.C, m, content, flags, stats)
-	}
-
-	// Feed jobs
-	go func() {
-		defer close(jobs)
-		for _, chatID := range chats {
-			select {
-			case <-ctx.Done():
-				return
-			case jobs <- broadcastJob{TargetID: chatID, IsChat: true}:
-			}
-		}
-		for _, userID := range users {
-			select {
-			case <-ctx.Done():
-				return
-			case jobs <- broadcastJob{TargetID: userID, IsChat: false}:
-			}
-		}
-	}()
-
-	// Wait for all workers to finish their jobs
-	wg.Wait()
-	bm.finalize(progressMsg, stats)
-}
-
-func (bm *BroadcastManager) worker(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	jobs <-chan broadcastJob,
-	tick <-chan time.Time,
-	m *tg.NewMessage,
-	content string,
-	flags *BroadcastFlags,
-	stats *BroadcastStats,
-) {
-	defer wg.Done()
-
-	for job := range jobs {
-		// Wait for the rate limiter token
+	// Broadcast to chats
+	for _, chatID := range chats {
 		select {
 		case <-ctx.Done():
+			bm.finalize(progressMsg, stats)
 			return
-		case <-tick:
+		default:
 		}
 
-		success := bm.sendMessage(ctx, m, job.TargetID, content, flags)
+		success := bm.sendMessage(ctx, m, chatID, content, flags)
 
-		if job.IsChat {
-			atomic.AddInt32(&stats.DoneChats, 1)
-			if !success {
-				atomic.AddInt32(&stats.FailedChats, 1)
-			}
-		} else {
-			atomic.AddInt32(&stats.DoneUsers, 1)
-			if !success {
-				atomic.AddInt32(&stats.FailedUsers, 1)
-			}
+		stats.mu.Lock()
+		stats.DoneChats++
+		stats.LastUpdate = time.Now()
+		if !success {
+			stats.FailedChats = append(stats.FailedChats, chatID)
+		}
+		stats.mu.Unlock()
+
+		messagesSent++
+		if !bm.handleDelay(ctx, messagesSent, flags.Delay) {
+			bm.finalize(progressMsg, stats)
+			return
 		}
 	}
+
+	// Broadcast to users
+	for _, userID := range users {
+		select {
+		case <-ctx.Done():
+			bm.finalize(progressMsg, stats)
+			return
+		default:
+		}
+
+		success := bm.sendMessage(ctx, m, userID, content, flags)
+
+		stats.mu.Lock()
+		stats.DoneUsers++
+		stats.LastUpdate = time.Now()
+		if !success {
+			stats.FailedUsers = append(stats.FailedUsers, userID)
+		}
+		stats.mu.Unlock()
+
+		messagesSent++
+		if !bm.handleDelay(ctx, messagesSent, flags.Delay) {
+			bm.finalize(progressMsg, stats)
+			return
+		}
+	}
+
+	bm.finalize(progressMsg, stats)
 }
 
 func (bm *BroadcastManager) sendMessage(
@@ -373,35 +408,53 @@ func (bm *BroadcastManager) sendMessage(
 	content string,
 	flags *BroadcastFlags,
 ) bool {
-	var err error
+	var (
+		sentMsg *tg.NewMessage
+		err     error
+	)
 
 	try := func() error {
 		if m.IsReply() {
-			fOpts := &tg.ForwardOptions{
-				HideAuthor: !flags.Forward, // True copies, False actually forwards
+			fOpts := &tg.ForwardOptions{}
+			if flags.Copy {
+				fOpts.HideAuthor = true
 			}
-			_, ferr := m.Client.Forward(
+			fMsgs, ferr := m.Client.Forward(
 				targetID,
 				m.Peer,
 				[]int32{m.ReplyID()},
 				fOpts,
 			)
-			return ferr
+			if ferr != nil {
+				return ferr
+			}
+			if len(fMsgs) > 0 {
+				sentMsg = &fMsgs[0]
+			}
+			return nil
 		}
 
-		_, ferr := m.Client.SendMessage(targetID, content)
-		return ferr
+		sent, ferr := m.Client.SendMessage(targetID, content)
+		if ferr != nil {
+			return ferr
+		}
+		sentMsg = sent
+		return nil
 	}
 
 	maxAttempts := 3
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		err = try()
 		if err == nil {
-			return true
+			break
 		}
 
 		if wait := tg.GetFloodWait(err); wait > 0 {
-			// If flood wait occurs, pause just this worker
+			gologging.ErrorF(
+				"FloodWait detected (%ds). Retrying (attempt %d).",
+				wait,
+				attempt,
+			)
 			if !bm.sleepCtx(ctx, time.Duration(wait)*time.Second) {
 				return false
 			}
@@ -419,7 +472,24 @@ func (bm *BroadcastManager) sendMessage(
 		}
 		return false
 	}
+
+	if sentMsg != nil && (flags.Pin || flags.PinLoud) {
+		if _, perr := m.Client.PinMessage(targetID, sentMsg.ID, &tg.PinOptions{Silent: !flags.PinLoud}); perr != nil {
+			gologging.ErrorF("Pin failed for %d: %v", targetID, perr)
+		}
+	}
 	return true
+}
+
+func (bm *BroadcastManager) handleDelay(
+	ctx context.Context,
+	count int,
+	baseDelay float64,
+) bool {
+	if count%30 == 0 {
+		return bm.sleepCtx(ctx, 7500*time.Millisecond)
+	}
+	return bm.sleepCtx(ctx, time.Duration(baseDelay*float64(time.Second)))
 }
 
 func (bm *BroadcastManager) updateProgress(
@@ -427,7 +497,7 @@ func (bm *BroadcastManager) updateProgress(
 	progressMsg *tg.NewMessage,
 	stats *BroadcastStats,
 ) {
-	ticker := time.NewTicker(7 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -435,12 +505,22 @@ func (bm *BroadcastManager) updateProgress(
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if stats.Finished.Load() {
+			stats.mu.Lock()
+			if stats.Finished {
+				stats.mu.Unlock()
 				return
 			}
-			text := formatBroadcastProgress(stats, false, progressMsg.ChannelID())
+			text := formatBroadcastProgress(
+				stats,
+				false,
+				progressMsg.ChannelID(),
+			)
+			stats.mu.Unlock()
+
 			progressMsg.Edit(text, &tg.SendOptions{
-				ReplyMarkup: core.GetBroadcastCancelKeyboard(progressMsg.ChannelID()),
+				ReplyMarkup: core.GetBroadcastCancelKeyboard(
+					progressMsg.ChannelID(),
+				),
 			})
 		}
 	}
@@ -450,8 +530,11 @@ func (bm *BroadcastManager) finalize(
 	progressMsg *tg.NewMessage,
 	stats *BroadcastStats,
 ) {
-	stats.Finished.Store(true)
+	stats.mu.Lock()
+	stats.Finished = true
 	text := formatBroadcastProgress(stats, true, progressMsg.ChannelID())
+	stats.mu.Unlock()
+
 	progressMsg.Edit(text)
 }
 
@@ -462,58 +545,58 @@ func formatBroadcastProgress(
 ) string {
 	elapsed := time.Since(stats.StartTime)
 
-	doneChats := atomic.LoadInt32(&stats.DoneChats)
-	doneUsers := atomic.LoadInt32(&stats.DoneUsers)
-	failedChats := atomic.LoadInt32(&stats.FailedChats)
-	failedUsers := atomic.LoadInt32(&stats.FailedUsers)
-
 	var sb strings.Builder
 
-	if final {
-		// Use your final headers if applicable, else default
-		sb.WriteString(F(chatID, "broadcast_completed_header") + "\n\n")
-	} else {
+	if !final {
 		sb.WriteString(F(chatID, "broadcast_progress_header") + "\n\n")
 	}
 
 	chatProgress := 0.0
 	if stats.TotalChats > 0 {
-		chatProgress = float64(doneChats) / float64(stats.TotalChats) * 100
+		chatProgress = float64(
+			stats.DoneChats,
+		) / float64(
+			stats.TotalChats,
+		) * 100
 	}
 
 	userProgress := 0.0
 	if stats.TotalUsers > 0 {
-		userProgress = float64(doneUsers) / float64(stats.TotalUsers) * 100
+		userProgress = float64(
+			stats.DoneUsers,
+		) / float64(
+			stats.TotalUsers,
+		) * 100
 	}
 
 	sb.WriteString(F(chatID, "broadcast_total_chats", locales.Arg{
-		"done":     doneChats,
+		"done":     stats.DoneChats,
 		"total":    stats.TotalChats,
 		"progress": fmt.Sprintf("%.1f", chatProgress),
 	}) + "\n")
 
 	sb.WriteString(F(chatID, "broadcast_total_users", locales.Arg{
-		"done":     doneUsers,
+		"done":     stats.DoneUsers,
 		"total":    stats.TotalUsers,
 		"progress": fmt.Sprintf("%.1f", userProgress),
 	}) + "\n\n")
 
-	if failedChats > 0 {
+	if len(stats.FailedChats) > 0 {
 		sb.WriteString(F(chatID, "broadcast_failed_chats", locales.Arg{
-			"count": failedChats,
+			"count": len(stats.FailedChats),
 		}) + "\n")
 	}
-	if failedUsers > 0 {
+	if len(stats.FailedUsers) > 0 {
 		sb.WriteString(F(chatID, "broadcast_failed_users", locales.Arg{
-			"count": failedUsers,
+			"count": len(stats.FailedUsers),
 		}) + "\n")
 	}
 
-	if failedChats > 0 || failedUsers > 0 {
+	if len(stats.FailedChats) > 0 || len(stats.FailedUsers) > 0 {
 		sb.WriteString("\n")
 	}
 
-	totalDone := doneChats + doneUsers
+	totalDone := stats.DoneChats + stats.DoneUsers
 	totalTargets := stats.TotalChats + stats.TotalUsers
 
 	avgSpeed := 0.0
@@ -521,9 +604,8 @@ func formatBroadcastProgress(
 		avgSpeed = float64(totalDone) / elapsed.Seconds()
 	}
 
-	// We indicate a smart auto delay instead of fixed static delay
 	sb.WriteString(F(chatID, "broadcast_delay", locales.Arg{
-		"delay": "Auto (Max 25/s)",
+		"delay": fmt.Sprintf("%.1f", stats.Delay),
 	}) + "\n")
 
 	sb.WriteString(F(chatID, "broadcast_elapsed", locales.Arg{
@@ -539,12 +621,16 @@ func formatBroadcastProgress(
 	}
 
 	if final {
-		totalSent := doneChats + doneUsers
-		totalFailed := failedChats + failedUsers
+		totalSent := stats.DoneChats + stats.DoneUsers
+		totalFailed := len(stats.FailedChats) + len(stats.FailedUsers)
 
 		successRate := 0.0
 		if totalTargets > 0 {
-			successRate = float64(totalSent-totalFailed) / float64(totalTargets) * 100
+			successRate = float64(
+				totalSent-totalFailed,
+			) / float64(
+				totalTargets,
+			) * 100
 		}
 
 		sb.WriteString("\n\n" + F(chatID, "broadcast_success_rate", locales.Arg{
@@ -592,9 +678,7 @@ func broadcastCancelCB(cb *tg.CallbackQuery) error {
 		F(cb.ChannelID(), "broadcast_cancel_done"),
 		&tg.CallbackOptions{Alert: true},
 	)
-	
-	// Appends the cancelled header so the progress message reflects the cancellation visually
-	cb.Edit(F(cb.ChannelID(), "broadcast_cancelled_header"))
+	cb.Edit(F(cb.ChannelID(), "broadcast_cancel_done"))
 	return tg.ErrEndGroup
 }
 
