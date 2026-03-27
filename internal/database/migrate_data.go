@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	oldDBName = "deadline"
+	oldDBName = "Yukki"
 )
 
 // old data structures
