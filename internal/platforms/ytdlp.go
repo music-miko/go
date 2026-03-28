@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"net/url"
 	"os/exec"
-	"regexp"
 	"strings"
 
 	"github.com/Laky-64/gologging"
@@ -44,11 +43,6 @@ type ytdlpInfo struct {
 	Entries     []ytdlpInfo `json:"entries"`
 }
 
-// URLs that are likely handled by YouTube
-var youtubePatterns = []*regexp.Regexp{
-	regexp.MustCompile(`(?i)(youtube\.com|youtu\.be|music\.youtube\.com)`),
-}
-
 func init() {
 	Register(60, &YtdlpPlatform{
 		name: PlatformYtDlp,
@@ -63,7 +57,7 @@ func (y *YtdlpPlatform) Name() state.PlatformName {
 func (y *YtdlpPlatform) CanGetTracks(query string) bool {
 	query = strings.TrimSpace(query)
 
-	// Must be a URL
+	// Securely parse the URL
 	parsedURL, err := url.Parse(query)
 	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
 		return false
@@ -71,15 +65,16 @@ func (y *YtdlpPlatform) CanGetTracks(query string) bool {
 
 	host := strings.ToLower(parsedURL.Host)
 
-	// Ignore Telegram URLs ( already handled by TeleramPlatform)
-	if host == "t.me" ||
-		host == "telegram.me" ||
-		host == "telegram.dog" ||
-		strings.HasSuffix(host, ".t.me") {
-		return false
+	// Strict exact or subdomain match for allowed yt-dlp platforms
+	if host == "youtube.com" || strings.HasSuffix(host, ".youtube.com") ||
+		host == "youtu.be" ||
+		host == "jiosaavn.com" || strings.HasSuffix(host, ".jiosaavn.com") ||
+		host == "saavn.com" || strings.HasSuffix(host, ".saavn.com") {
+		return true
 	}
 
-	return true
+	// Block EVERYTHING else (prevents yt-dlp from downloading adult/unsupported sites)
+	return false
 }
 
 // GetTracks extracts metadata using yt-dlp
@@ -324,12 +319,12 @@ func (y *YtdlpPlatform) infoToTrack(
 	}
 }
 
-// isYouTubeURL checks if the URL is from YouTube
+// isYouTubeURL checks if the URL is from YouTube safely using host extraction
 func (y *YtdlpPlatform) isYouTubeURL(urlStr string) bool {
-	for _, pattern := range youtubePatterns {
-		if pattern.MatchString(urlStr) {
-			return true
-		}
+	parsedURL, err := url.Parse(urlStr)
+	if err != nil || parsedURL.Host == "" {
+		return false
 	}
-	return false
+	host := strings.ToLower(parsedURL.Host)
+	return host == "youtube.com" || strings.HasSuffix(host, ".youtube.com") || host == "youtu.be"
 }
