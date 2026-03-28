@@ -123,7 +123,7 @@ func processURLs(urls []string, video bool) ([]*state.Track, []string) {
 		
 		// If the domain doesn't strictly match our allowed files, p will be nil
 		if p == nil {
-			errMsg := "❌ Unsupported Platform.\n\nOnly the following are supported:\n• JioSaavn\n• YouTube\n• Spotify\n• SoundCloud\n• Telegram files\n• Direct Stream URLs"
+			errMsg := "\nOnly the following are supported:\n• JioSaavn\n• YouTube\n• Spotify\n• SoundCloud\n• Telegram files\n• Direct Stream URLs"
 			gologging.Error("Blocked unsupported URL: " + url)
 			errs = append(errs, errMsg)
 			continue
