@@ -115,7 +115,7 @@ func (f *ArcApiPlatform) Download(
 
 	// 1. Try Media DB Cache (Telegram Channel Download)
 	if dbPath, err := f.downloadFromMediaDB(ctx, track, path, pm); err == nil && dbPath != "" {
-		gologging.Info(fmt.Sprintf("✅ DB-CACHE | %s | Video: %t", track.ID, track.Video))
+		gologging.Info(fmt.Sprintf("DB-CACHE | %s | Video: %t", track.ID, track.Video))
 		return dbPath, nil
 	} else if err != nil {
 		gologging.DebugF("ArcApi DB check failed or missed: %v", err)
@@ -146,7 +146,7 @@ func (f *ArcApiPlatform) Download(
 		return "", errors.New("empty file returned by API")
 	}
 
-	gologging.Info(fmt.Sprintf("✅ V2-API | %s | Video: %t", track.ID, track.Video))
+	gologging.Info(fmt.Sprintf("V2-API | %s | Video: %t", track.ID, track.Video))
 	return path, nil
 }
 
@@ -240,7 +240,7 @@ func (f *ArcApiPlatform) v2Download(ctx context.Context, track *state.Track) (st
 		query = track.URL
 	}
 
-	for cycle := 0; cycle < 5; cycle++ {
+	for cycle := 0; cycle < 3; cycle++ {
 		reqURL := fmt.Sprintf("%s/youtube/v2/download?api_key=%s&query=%s&isVideo=%t",
 			strings.TrimRight(apiURL, "/"),
 			apiKey,
