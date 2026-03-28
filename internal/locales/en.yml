@@ -1,6 +1,5 @@
 name: "🇺🇸 English"
 
-# buttons
 CONFIRM_RESUME_BTN: "▶️ Resume"
 CONFIRM_UNMUTE_BTN: "🔊 Unmute"
 CONFIRM_STOP_BTN: "⏹️ Stop"
@@ -22,29 +21,25 @@ HELP_SUDOERS_BTN: "Sudoers"
 
 BACK_BTN: "⬅️ Back"
 
-# basically this string used in /command [bool]
 invalid_bool: "⚠️ <b>Invalid value.</b>\nUse 'enable' or 'disable'."
 
 active_chats_info: "📊 <b>Active Chats:</b>\n\nThere are {count} active chats across the bot system."
 active_chats_info_with_broken: "📊 <b>Active Chats:</b>\n\nThere are {count} active chats across the bot system, but {broken} of them may have issues displaying correctly."
 
 
-# 🚫 Assistant Restricted / Banned
 assistant_restricted_warning: |
   ⚠️ <b>Assistant Restricted</b>
 
   The assistant {assistant} (ID: <code>{id}</code>) has been <b>banned</b> or restricted in this chat.
   I cannot play music, manage the queue, or clean up tracks while this continues.
 
-  <i>Unban the assistant to restore all music features 🎵</i>
+  Unban the assistant to restore all music features 🎵
 
-# 🧩 Common auth messages
 auth_no_user: "⚠️ Please provide a user — use:\n{cmd} [user_id] or reply to a user's message."
 user_extract_fail: "⚠️ Unable to get that user: {error}"
 auth_limit_reached: "⚠️ This chat has reached the maximum authorized users limit ({limit}). Please remove someone before adding a new one."
 already_authed: "⚠️ That user is already authorized — no need to add them again."
 
-# 🤖 Add auth
 cannot_authorize_user: "⚠️ This user cannot be authorized.\nThe bot owner, the bot itself, or yourself do not require authorization."
 addauth_user_is_admin: "⚠️ This user is already a chat administrator. No authorization is required."
 addauth_bot_user: "🤖 You can’t add a bot to the auth list — authusers must be human!"
@@ -52,14 +47,11 @@ addauth_add_fail: "❌ Failed to add authorized user: {error}"
 addauth_success_with_count: "✅ Added {user}.\nNow {count}/{limit} authorized users."
 addauth_success: "✅ Successfully added {user} to the authorized users list."
 
-# 🤖 Bot Added to Chat
 bot_added_normal: "🎵 Thanks for adding me! Use /play [song] to start playing music."
 
-# 🛠️ Bot Added During Maintenance
 bot_added_maintenance: "⚠️ I'm currently under maintenance and will be back soon. Thanks for your patience! ⏰"
-maint_reason_generic: "<i>📝 Reason: {reason}</i>"
+maint_reason_generic: "📝 Reason: {reason}"
 
-# ⚠️ Bot Demotion
 bot_demotion_goodbye: |
   <b>⚠️ Permission Lost</b>
 
@@ -92,8 +84,6 @@ broadcast_cancel_owner_only: "⚠️ Only the owner can cancel broadcasts."
 broadcast_cancel_none_running: "ℹ️ No broadcast is currently running."
 broadcast_cancel_done: "🚫 Broadcast cancelled."
 
-# 🎧 CPlay (Channel Play)
-
 cplay_id_not_set: "⚠️ cplay ID not set.\nUse <code>/cplay --set &lt;chat_id&gt;</code> to set it."
 cplay_usage: "<b>Usage:</b> <code>/cplay --set &lt;channel_id&gt;</code>"
 cplay_invalid_chat_id: "<b>Invalid Chat ID:</b> Please provide a valid integer ID for the channel."
@@ -103,13 +93,11 @@ cplay_channel_not_accessible: "<b>Channel Not Accessible:</b> Could not retrieve
 cplay_save_error: "<b>Error:</b> Failed to save CPlay settings."
 cplay_enabled: "✅ <b>Channel Play enabled.</b> All <code>/c</code> commands will now work in channel <code>{channel_id}</code>."
 
-# Callback handler messages
 invalid_request: "⚠️ Invalid request."
 unknown_action: "⚠️ Unknown action."
 download_cancelled: "✅ Download cancelled."
 no_download_to_cancel: "ℹ️ No download to cancel."
 
-# Pause callback
 cb_pause_success: "⏸️ Track paused at {position}"
 cb_pause_message: |
   <b>⏸️ Track Paused</b>
@@ -118,34 +106,29 @@ cb_pause_message: |
   <b>▫ Position:</b> {position} / {duration}
   <b>▫ Paused by:</b> {user}
 
-# Resume callback
 cb_already_playing: "ℹ️ Track is already playing."
 cb_resume_failed: "❌ Failed to resume playback."
 cb_resume_success: "▶️ Resumed at {position}."
 cb_resume_message: |
-  <b>🎵 Now Playing:</b>
+  <u><b>| Started streaming</b></u>
 
   <b>Track:</b> <a href="{url}">{title}</a>
   <b>Duration:</b> {duration}
   <b>Resumed by:</b> {user}
 
-# Replay callback
 cb_replaying: "🔁 <b>Replaying current track...</b>"
 cb_replay_failed: "❌ Failed to replay track."
 cb_replay_success: "🔁 Track replayed."
 cb_replay_edited: "🔁 Track replayed by {user}."
 
-# Skip callback
 cb_skip_queue_empty: "⏹️ Playback stopped — queue empty."
 cb_skip_download_failed: "❌ Failed to download next track."
 cb_skip_play_failed: "❌ Failed to play next track."
 cb_skip_success: "⏭️ Track skipped."
 cb_skip_edited: "⏭️ Skipped by {user}"
 
-# Stop callback
 cb_stop_success: "⏹️ Playback stopped."
 
-# Mute/Unmute callback
 cb_mute_success: "🔇 Muted."
 cb_mute_message: |
   <b>🔇 Playback Muted</b>
@@ -341,7 +324,7 @@ logger_group: "Group:"
 logger_requested_by: "Requested by:"
 logger_timestamp: "Timestamp:"
 
-loop_usage: "🔁 <b>Loop Control</b>\n\nUsage: {cmd} [count]\n• 0 - Disable loop\n• 1-10 - Loop count\n\n<i>{count_line}</i>"
+loop_usage: "🔁 <b>Loop Control</b>\n\nUsage: {cmd} [count]\n• 0 - Disable loop\n• 1-10 - Loop count\n\n{count_line}"
 loop_invalid: "⚠️ <b>Invalid loop count.</b>\nUse 0 to disable or 1-10 to set loop count."
 loop_already_set: "⚠️ Loop count is already set to <b>{count}</b> time(s)."
 loop_disabled: "🔁 Loop has been <b>disabled</b> by {user}"
@@ -371,11 +354,9 @@ logs_lines_caption: "📋 <b>Recent Log Lines</b>\n\nShowing last {count} lines 
 logs_old_caption: "📋 <b>Oldest Log Lines</b>\n\nShowing first {count} lines from the beginning of the log."
 logs_cleared: "✅ <b>Log File Cleared</b>\n\nSuccessfully cleared the log file.\n<b>Previous Size:</b> {size_mb} MB"
 
-# reason - if maintenance reason available so at the place of {reason} the maint_reason will provided
 maint: "⚠️ I'm under maintenance at the moment and temporarily unavailable. Please check back later.\n\n{reason}"
-maint_reason: "<i>📝 Reason: {reason}</i>"
+maint_reason: "📝 Reason: {reason}"
 
-# ⚙️ Maintenance control
 maint_usage: "⚙️ <b>Maintenance Control</b>\n\nUsage: {cmd} [enable|disable] [reason]\n📜 Current status: {status}"
 maint_check_fail: "❌ Failed to check maintenance status: <code>{error}</code>"
 maint_already_enabled: "ℹ️ Maintenance mode is already enabled 🟢."
@@ -395,7 +376,6 @@ move_invalid_indexes_min: "⚠️ Indexes must be greater than 0."
 move_invalid_indexes_max: "⚠️ Queue has only {queue_len} tracks."
 move_success: "✅ Moved track from position {from} to {to} by {user}."
 
-# 🔇 Mute messages
 mute_already_muted: "🔇 <b>Already Muted</b>\nThe music is already muted in this chat.\nWould you like to unmute it?"
 mute_already_muted_with_time: "🔇 <b>Already Muted</b>\nThe music is muted.\nAuto-unmute in <b>{duration}</b>."
 mute_invalid_duration: "⚠️ Invalid duration for auto-unmute.\nIt must be between <b>5</b> and <b>3600</b> seconds."
@@ -514,7 +494,6 @@ queue_empty: "⚠️ <b>The queue is already empty.</b>"
 queue_restored: "✅ Successfully restored <b>{count}</b> tracks to the queue."
 queue_restore_no_data: "❌ No cleared queue found to restore, or a new song has already been added."
 
-# 🔄 Reload
 reload_start: "⚙️ Reloading admin cache, voice chat status, and assistant status..."
 
 reload_done: "<b>⚙️ Reload complete:</b>\n\n{summary}"
@@ -541,7 +520,6 @@ remove_index_too_small: "⚠️ <b>Index must be greater than 0.</b>"
 remove_index_too_big: "⚠️ Invalid index. Queue only has <b>{total}</b> tracks."
 remove_success: "✅ Removed track at position <b>{index}</b> from the queue.\n👤 By: {user}"
 
-# 🔁 Replay
 replay_failed: "❌ <b>Replay Failed</b>\nError: <code>{error}</code>"
 replay_success: |
   🔁 <b>Now replaying</b>
@@ -550,7 +528,6 @@ replay_success: |
   ⏱️ Duration: <code>{duration}</code>
   ⚙️ Speed: <b>{speed}x</b>
 
-# ▶️ Resume
 resume_already_playing: "ℹ️ <b>Already Playing</b>\nThe music is already playing in this chat.\nWould you like to pause it?"
 resume_failed: "❌ <b>Playback Resume Failed</b>\nError: <code>{error}</code>"
 resume_success: |
@@ -757,10 +734,9 @@ stats_served_chats_err: "• Chats: <code>Error: {error}</code>"
 stats_served_users: "• Users: <code>{count}</code>"
 stats_served_users_err: "• Users: <code>Error: {error}</code>"
 
-# 👑 Sudo users
 
-sudo_owner_self: "😂 Haha, you’re the boss already! Why are you even trying to add yourself?"
-sudo_bot_self: "🤖 Haha, I’m the bot! I can’t add myself to the sudo list — even the owner can’t cheat me 😎"
+sudo_owner_self: "Haha, you’re the boss already! Why are you even trying to add yourself?"
+sudo_bot_self: "🤖 Haha, I’m the bot! I can’t add myself to the sudo list — even the owner can’t cheat me"
 sudo_bot_user: "🤖 You can’t add a bot to the sudo list — sudoers must be human!"
 
 sudo_fetch_user_fail: "❌ Failed to fetch user info. Maybe the user is inaccessible.\n<i>{error}</i>"
@@ -770,7 +746,7 @@ sudo_add_fail: "❌ Failed to add sudo: <i>{error}</i>"
 sudo_add_success: "✅ Added {user} (<code>{id}</code>) to sudoers."
 sudo_assistant_self: "🤖 The assistant is always in the sudo list by default — it cannot be added again."
 
-sudo_owner_remove_block: "😎 Nice try! You can’t remove the owner — they’re untouchable."
+sudo_owner_remove_block: "Nice try! You can’t remove the owner — they’re untouchable."
 sudo_assistant_cannot_remove: "🤖 The assistant is required and cannot be removed from the sudo list."
 sudo_not_exists: "⚠️ User {user} (<code>{id}</code>) is not a sudoer."
 sudo_remove_fail: "❌ Failed to remove sudo: <i>{error}</i>"
@@ -885,13 +861,12 @@ stream_downloading_next: "Hold On !!\n\n📥 Downloading your next track..."
 stream_download_fail: "❌ Failed to download.\nError: <code>{error}</code>"
 stream_play_fail: "❌ Failed to play the song."
 stream_now_playing: |
-  <b>🎵 Now Playing:</b>
+  <u><b>| Started streaming</b></u>
 
   <b>Track:</b> <a href="{url}">{title}</a>
   <b>Duration:</b> {duration}
   <b>Requested by:</b> {by}
 
-# 👑 Sudo / Owner Join Messages
 sudo_join_owner: "👑 {user} — owner of {bot} — just entered the chat."
 sudo_join_sudo: "🛡️ {user}, a sudo user of {bot}, just joined the chat."
 
