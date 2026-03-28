@@ -365,10 +365,22 @@ func (bm *BroadcastManager) start(
 		}
 		stats.mu.Unlock()
 
-		messagesSent++
-		if !bm.handleDelay(ctx, messagesSent, flags.Delay) {
-			bm.finalize(progressMsg, stats)
-			return
+		// SPEED OPTIMIZATION:
+		// Only trigger the standard delay and the 7.5s 30-message batch penalty
+		// if a message actually went through. 
+		if success {
+			messagesSent++
+			if !bm.handleDelay(ctx, messagesSent, flags.Delay) {
+				bm.finalize(progressMsg, stats)
+				return
+			}
+		} else {
+			// Fast-fail: Skip the long delay for dead chats. Just do a micro-sleep (30ms) 
+			// to avoid hammering Telegram's API with too many invalid IDs in 1 second.
+			if !bm.sleepCtx(ctx, 30*time.Millisecond) {
+				bm.finalize(progressMsg, stats)
+				return
+			}
 		}
 	}
 
@@ -391,10 +403,18 @@ func (bm *BroadcastManager) start(
 		}
 		stats.mu.Unlock()
 
-		messagesSent++
-		if !bm.handleDelay(ctx, messagesSent, flags.Delay) {
-			bm.finalize(progressMsg, stats)
-			return
+		if success {
+			messagesSent++
+			if !bm.handleDelay(ctx, messagesSent, flags.Delay) {
+				bm.finalize(progressMsg, stats)
+				return
+			}
+		} else {
+			// Fast-fail micro-sleep
+			if !bm.sleepCtx(ctx, 30*time.Millisecond) {
+				bm.finalize(progressMsg, stats)
+				return
+			}
 		}
 	}
 
@@ -460,6 +480,8 @@ func (bm *BroadcastManager) sendMessage(
 			}
 			continue
 		} else {
+			// It instantly breaks here on standard "USER_DEACTIVATED" / "INVALID_ID" errors
+			// making failures highly responsive.
 			break
 		}
 	}
