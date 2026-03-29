@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"net/url"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/Laky-64/gologging"
@@ -40,7 +41,68 @@ type ytdlpInfo struct {
 	Uploader    string      `json:"uploader"`
 	Description string      `json:"description"`
 	IsLive      bool        `json:"is_live"`
+	Extractor   string      `json:"extractor"`
 	Entries     []ytdlpInfo `json:"entries"`
+}
+
+var bannedExtractors = map[string]bool{
+	"alphaporno":     true,
+	"beeg":           true,
+	"behindkink":     true,
+	"bongacams":      true,
+	"cam4":           true,
+	"cammodels":      true,
+	"camsoda":        true,
+	"chaturbate":     true,
+	"drtuber":        true,
+	"eporner":        true,
+	"erocast":        true,
+	"eroprofile":     true,
+	"fourtube":       true,
+	"goshgay":        true,
+	"hellporno":      true,
+	"iwara":          true,
+	"lovehomeporn":   true,
+	"manyvids":       true,
+	"motherless":     true,
+	"murrtube":       true,
+	"nonktube":       true,
+	"noodlemagazine": true,
+	"nubilesporn":    true,
+	"nuvid":          true,
+	"oftv":           true,
+	"peekvids":       true,
+	"pornbox":        true,
+	"pornflip":       true,
+	"pornhub":        true,
+	"pornotube":      true,
+	"pornovoisines":  true,
+	"pornoxo":        true,
+	"redgifs":        true,
+	"redtube":        true,
+	"rule34video":    true,
+	"sauceplus":      true,
+	"sexu":           true,
+	"slutload":       true,
+	"spankbang":      true,
+	"stripchat":      true,
+	"sunporno":       true,
+	"thisvid":        true,
+	"tnaflix":        true,
+	"toypics":        true,
+	"txxx":           true,
+	"xhamster":       true,
+	"xnxx":           true,
+	"xvideos":        true,
+	"xxxymovies":     true,
+	"youjizz":        true,
+	"youporn":        true,
+	"zenporn":        true,
+}
+
+// URLs that are likely handled by YouTube
+var youtubePatterns = []*regexp.Regexp{
+	regexp.MustCompile(`(?i)(youtube\.com|youtu\.be|music\.youtube\.com)`),
 }
 
 func init() {
@@ -57,7 +119,7 @@ func (y *YtdlpPlatform) Name() state.PlatformName {
 func (y *YtdlpPlatform) CanGetTracks(query string) bool {
 	query = strings.TrimSpace(query)
 
-	// Securely parse the URL
+	// Must be a URL
 	parsedURL, err := url.Parse(query)
 	if err != nil || parsedURL.Scheme == "" || parsedURL.Host == "" {
 		return false
@@ -65,16 +127,15 @@ func (y *YtdlpPlatform) CanGetTracks(query string) bool {
 
 	host := strings.ToLower(parsedURL.Host)
 
-	// Strict exact or subdomain match for allowed yt-dlp platforms
-	if host == "youtube.com" || strings.HasSuffix(host, ".youtube.com") ||
-		host == "youtu.be" ||
-		host == "jiosaavn.com" || strings.HasSuffix(host, ".jiosaavn.com") ||
-		host == "saavn.com" || strings.HasSuffix(host, ".saavn.com") {
-		return true
+	// Ignore Telegram URLs ( already handled by TeleramPlatform)
+	if host == "t.me" ||
+		host == "telegram.me" ||
+		host == "telegram.dog" ||
+		strings.HasSuffix(host, ".t.me") {
+		return false
 	}
 
-	// Block EVERYTHING else (prevents yt-dlp from downloading adult/unsupported sites)
-	return false
+	return true
 }
 
 // GetTracks extracts metadata using yt-dlp
@@ -100,6 +161,12 @@ func (y *YtdlpPlatform) GetTracks(
 		)
 	}
 
+	// Check for banned extractor
+	if bannedExtractors[strings.ToLower(info.Extractor)] {
+		gologging.InfoF("YtDlp: Blocked adult content from extractor: %s", info.Extractor)
+		return nil, errors.New("adult content is not allowed")
+	}
+
 	var tracks []*state.Track
 
 	// Handle playlists
@@ -111,6 +178,11 @@ func (y *YtdlpPlatform) GetTracks(
 		for _, entry := range info.Entries {
 			if entry.IsLive {
 				continue // Skip live entries
+			}
+			// Check entry extractor if present (sometimes entries have their own extractor info)
+			if entry.Extractor != "" && bannedExtractors[strings.ToLower(entry.Extractor)] {
+				gologging.InfoF("YtDlp: Skipping banned entry from extractor: %s", entry.Extractor)
+				continue
 			}
 			track := y.infoToTrack(&entry, video)
 			tracks = append(tracks, track)
@@ -319,12 +391,12 @@ func (y *YtdlpPlatform) infoToTrack(
 	}
 }
 
-// isYouTubeURL checks if the URL is from YouTube safely using host extraction
+// isYouTubeURL checks if the URL is from YouTube
 func (y *YtdlpPlatform) isYouTubeURL(urlStr string) bool {
-	parsedURL, err := url.Parse(urlStr)
-	if err != nil || parsedURL.Host == "" {
-		return false
+	for _, pattern := range youtubePatterns {
+		if pattern.MatchString(urlStr) {
+			return true
+		}
 	}
-	host := strings.ToLower(parsedURL.Host)
-	return host == "youtube.com" || strings.HasSuffix(host, ".youtube.com") || host == "youtu.be"
+	return false
 }
