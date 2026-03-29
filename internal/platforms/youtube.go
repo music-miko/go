@@ -9,8 +9,12 @@ package platforms
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -39,7 +43,12 @@ var (
 		`(?i)(?:youtube\.com|music\.youtube\.com).*(?:\?|&)list=([A-Za-z0-9_-]+)`,
 	)
 	playlistIDRe2 = regexp.MustCompile(`list=([0-9A-Za-z_-]+)`)
-	youtubeCache  = utils.NewCache[string, []*state.Track](1 * time.Hour)
+
+	// New Regexes for Fast HTML Scraping
+	ytInitialDataRegex   = regexp.MustCompile(`(?:var ytInitialData|window\["ytInitialData"\])\s*=\s*(\{.*?\});`)
+	fallbackVideoIDRegex = regexp.MustCompile(`"videoRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"`)
+
+	youtubeCache = utils.NewCache[string, []*state.Track](1 * time.Hour)
 )
 
 const (
@@ -81,10 +90,17 @@ func (p *YouTubePlatform) GetTracks(
 		playlistID := p.extractPlaylistID(trimmed)
 		videoID := p.extractVideoID(trimmed)
 
-		if playlistID != "" && videoID == "" {
+		// Prioritize playlist over single track if list parameter exists
+		if playlistID != "" {
 			tracks, err = p.handlePlaylist(trimmed)
-		} else {
+			// Fallback: If playlist fetching fails but it has a video ID, load the single video
+			if err != nil && videoID != "" {
+				tracks, err = p.handleTrackURL(trimmed)
+			}
+		} else if videoID != "" {
 			tracks, err = p.handleTrackURL(trimmed)
+		} else {
+			return nil, errors.New("invalid youtube url")
 		}
 	} else {
 		tracks, err = p.VideoSearch(trimmed, false)
@@ -113,13 +129,16 @@ func (p *YouTubePlatform) handlePlaylist(
 		return nil, errors.New("invalid playlist url")
 	}
 
+	videoID := p.extractVideoID(rawURL)
+
 	var (
 		tracks []*state.Track
 		err    error
 	)
 
+	// Send videoID if it's a Mix (RD...) so the context matches the source song
 	if strings.HasPrefix(playlistID, "RD") {
-		tracks, err = p.fetchMixPlaylist(playlistID, config.QueueLimit)
+		tracks, err = p.fetchMixPlaylist(playlistID, videoID, config.QueueLimit)
 	} else {
 		tracks, err = p.fetchPlaylist(playlistID, config.QueueLimit)
 	}
@@ -254,6 +273,14 @@ func (p *YouTubePlatform) extractVideoID(u string) string {
 
 func (p *YouTubePlatform) performSearch(query string, limit int) ([]*state.Track, error) {
 	gologging.DebugF("[YouTube] Searching: %s", query)
+
+	fastTracks, err := p.fastSearch(query, limit)
+	if err == nil && len(fastTracks) > 0 {
+		return fastTracks, nil
+	}
+
+	gologging.DebugF("[YouTube] Fast search failed, falling back to InnerTube API")
+
 	var result map[string]any
 
 	payload := map[string]any{
@@ -269,7 +296,7 @@ func (p *YouTubePlatform) performSearch(query string, limit int) ([]*state.Track
 		"params": "CAASAhAB",
 	}
 
-	err := p.callInnerTube("search", payload, &result)
+	err = p.callInnerTube("search", payload, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -290,6 +317,130 @@ func (p *YouTubePlatform) performSearch(query string, limit int) ([]*state.Track
 	var tracks []*state.Track
 	p.parseNodes(contents, &tracks, limit, "videoRenderer")
 	return tracks, nil
+}
+
+
+func (p *YouTubePlatform) fastSearch(query string, limit int) ([]*state.Track, error) {
+	searchURL := "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
+
+	req, err := http.NewRequest("GET", searchURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	html := string(bodyBytes)
+
+	var tracks []*state.Track
+	matches := ytInitialDataRegex.FindStringSubmatch(html)
+	if len(matches) > 1 {
+		var data map[string]any
+		if err := json.Unmarshal([]byte(matches[1]), &data); err == nil {
+			contents, ok := dig(data, "contents", "twoColumnSearchResultsRenderer", "primaryContents", "sectionListRenderer", "contents").([]any)
+			if ok {
+				for _, section := range contents {
+					items, ok := dig(section, "itemSectionRenderer", "contents").([]any)
+					if !ok {
+						continue
+					}
+					for _, item := range items {
+						vr, ok := dig(item, "videoRenderer").(map[string]any)
+						if !ok {
+							continue
+						}
+						vid := safeString(vr["videoId"])
+						if vid == "" {
+							continue
+						}
+
+						// Avoid duplicates
+						isDup := false
+						for _, t := range tracks {
+							if t.ID == vid {
+								isDup = true
+								break
+							}
+						}
+						if isDup {
+							continue
+						}
+
+						title := "Unknown Title"
+						if runs, ok := dig(vr, "title", "runs").([]any); ok && len(runs) > 0 {
+							title = safeString(dig(runs[0], "text"))
+						}
+
+						durationText := "0:00"
+						if text := safeString(dig(vr, "lengthText", "simpleText")); text != "" {
+							durationText = text
+						}
+
+						thumb := fmt.Sprintf("https://i.ytimg.com/vi/%s/hqdefault.jpg", vid)
+						if thumbs, ok := dig(vr, "thumbnail", "thumbnails").([]any); ok && len(thumbs) > 0 {
+							if last, ok := thumbs[len(thumbs)-1].(map[string]any); ok {
+								thumb = strings.Split(safeString(last["url"]), "?")[0]
+							}
+						}
+
+						t := &state.Track{
+							URL:      "https://www.youtube.com/watch?v=" + vid,
+							Title:    title,
+							ID:       vid,
+							Artwork:  thumb,
+							Duration: parseDuration(durationText),
+							Source:   PlatformYouTube,
+						}
+						tracks = append(tracks, t)
+						if limit > 0 && len(tracks) >= limit {
+							return tracks, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Fallback Regex if JSON parsing completely fails
+	if len(tracks) == 0 {
+		vidMatches := fallbackVideoIDRegex.FindAllStringSubmatch(html, -1)
+		seen := make(map[string]bool)
+		for _, m := range vidMatches {
+			if len(m) > 1 {
+				vid := m[1]
+				if !seen[vid] {
+					seen[vid] = true
+					t := &state.Track{
+						URL:      "https://www.youtube.com/watch?v=" + vid,
+						Title:    "Unknown Title",
+						ID:       vid,
+						Artwork:  fmt.Sprintf("https://i.ytimg.com/vi/%s/hqdefault.jpg", vid),
+						Duration: 0,
+						Source:   PlatformYouTube,
+					}
+					tracks = append(tracks, t)
+					if limit > 0 && len(tracks) >= limit {
+						return tracks, nil
+					}
+				}
+			}
+		}
+	}
+
+	if len(tracks) > 0 {
+		return tracks, nil
+	}
+	return nil, errors.New("no tracks found in fast search")
 }
 
 func (p *YouTubePlatform) fetchVideo(videoID string) (*state.Track, error) {
@@ -360,7 +511,7 @@ func (p *YouTubePlatform) fetchPlaylist(playlistID string, limit int) ([]*state.
 	return tracks, nil
 }
 
-func (p *YouTubePlatform) fetchMixPlaylist(playlistID string, limit int) ([]*state.Track, error) {
+func (p *YouTubePlatform) fetchMixPlaylist(playlistID string, videoID string, limit int) ([]*state.Track, error) {
 	gologging.DebugF("[YouTube] Fetching mix: %s", playlistID)
 	var result map[string]any
 
@@ -372,6 +523,10 @@ func (p *YouTubePlatform) fetchMixPlaylist(playlistID string, limit int) ([]*sta
 			},
 		},
 		"playlistId": playlistID,
+	}
+
+	if videoID != "" {
+		payload["videoId"] = videoID
 	}
 
 	err := p.callInnerTube("next", payload, &result)
