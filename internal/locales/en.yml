@@ -931,6 +931,7 @@ help_admin: |
   <i>Music and playback control tools for admins to handle playback easily.</i>
 
   <b>Commands:</b>
+  <b>/playmode</b> - Control who can use /play
   <b>/speed</b> - Change playback speed
   <b>/skip</b> - Skip the current song
   <b>/pause</b> - Pause the current playback
