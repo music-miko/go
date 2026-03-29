@@ -436,6 +436,11 @@ var handlers = []MsgHandlerDef{
 		Handler: nothumbHandler,
 		Filters: []telegram.Filter{superGroupFilter, authFilter},
 	},
+	{
+		Pattern: "playmode",
+		Handler: playmodeHandler,
+		Filters: []telegram.Filter{superGroupFilter, adminFilter},
+	},
 }
 
 var cbHandlers = []CbHandlerDef{
