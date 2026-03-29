@@ -27,6 +27,8 @@ import (
 	"main/internal/utils"
 )
 
+// TODO: NOT TESTED YET
+
 type platformEntry struct {
 	platform state.Platform
 	priority int
@@ -120,11 +122,9 @@ func processURLs(urls []string, video bool) ([]*state.Track, []string) {
 	for _, url := range urls {
 		gologging.Info("Processing URL: " + url)
 		p := findPlatform(url)
-		
-		// If the domain doesn't strictly match our allowed files, p will be nil
 		if p == nil {
-			errMsg := "\nOnly the following are supported:\n• JioSaavn\n• YouTube\n• Spotify\n• SoundCloud\n• Telegram files\n• Direct Stream URLs"
-			gologging.Error("Blocked unsupported URL: " + url)
+			errMsg := "No platform found for URL: " + url
+			gologging.Error(errMsg)
 			errs = append(errs, errMsg)
 			continue
 		}
@@ -193,149 +193,3 @@ func processReplyChain(m *telegram.NewMessage) ([]*state.Track, error) {
 	if isVideo {
 		noThumb, err := database.ThumbnailsDisabled(m.ChannelID())
 		if err != nil || !noThumb {
-
-			gologging.Debug(
-				"Reply media is video, handling thumbnail for ID: " + track.ID,
-			)
-			downloadThumbnail(target, track)
-		}
-	}
-
-	gologging.Info("Returning track from Telegram reply")
-	return []*state.Track{track}, nil
-}
-
-// Download attempts to download a track using available downloaders
-func Download(
-	ctx context.Context,
-	track *state.Track,
-	statusMsg *telegram.NewMessage,
-) (string, error) {
-	gologging.Debug(
-		"Download requested for track: " + track.ID + " | Source: " + string(
-			track.Source,
-		),
-	)
-	var errs []string
-
-	platforms := GetOrderedPlatforms()
-	for _, p := range platforms {
-		if !p.CanDownload(track.Source) {
-			gologging.Debug(
-				"Platform [" + string(
-					p.Name(),
-				) + "] cannot download source: " + string(
-					track.Source,
-				),
-			)
-			continue
-		}
-
-		gologging.Debug("Attempting download with platform: " + string(p.Name()))
-		path, err := p.Download(ctx, track, statusMsg)
-		if err == nil {
-			gologging.Info("Download successful via " + string(p.Name()) + " -> " + path)
-			return path, nil
-		}
-
-		if errors.Is(err, context.Canceled) {
-			gologging.Debug("Download canceled by context (user/system request)")
-			return "", err
-		}
-
-		errMsg := string(p.Name()) + ": " + err.Error()
-		gologging.Error("Download failed with " + errMsg)
-		errs = append(errs, errMsg)
-	}
-
-	if len(errs) > 0 {
-		return "", combineErrors("Multiple download errors occurred", errs)
-	}
-
-	return "", errors.New("no downloader available for source: " + string(track.Source))
-}
-
-// --- Helpers ---
-
-func findMediaInReply(m *telegram.NewMessage) (*telegram.NewMessage, bool, error) {
-	curr, err := m.GetReplyMessage()
-	if err != nil {
-		gologging.Error("Failed to fetch initial reply: " + err.Error())
-		return nil, false, fmt.Errorf("failed to get replied message: %w", err)
-	}
-
-	for i := 0; i < 2; i++ {
-		gologging.Debug(
-			"Checking reply level " + strconv.Itoa(i+1) + " for playable media",
-		)
-		if v, a := playableMedia(curr); v || a {
-			gologging.Debug(
-				"Found media in reply chain | isVideo: " + strconv.FormatBool(v),
-			)
-			return curr, v, nil
-		}
-
-		if !curr.IsReply() {
-			break
-		}
-
-		next, err := curr.GetReplyMessage()
-		if err != nil {
-			gologging.Debug("Reply chain ended due to error: " + err.Error())
-			break
-		}
-		curr = next
-	}
-
-	return nil, false, errors.New("⚠️ Reply with a valid media (audio/video)")
-}
-
-func downloadThumbnail(m *telegram.NewMessage, t *state.Track) {
-	if err := os.MkdirAll("cache", os.ModePerm); err != nil {
-		gologging.Error("Thumbnail cache creation failed: " + err.Error())
-		return
-	}
-
-	dest := filepath.Join("cache", "thumb_"+t.ID+".jpg")
-	if _, err := os.Stat(dest); os.IsNotExist(err) {
-		gologging.Debug("Downloading thumbnail to: " + dest)
-		path, err := m.Download(&telegram.DownloadOptions{
-			ThumbOnly: true,
-			FileName:  dest,
-		})
-		if err == nil {
-			t.Artwork = path
-			gologging.Debug("Thumbnail successfully linked: " + path)
-		} else {
-			gologging.Error("Thumbnail download failed: " + err.Error())
-		}
-	} else {
-		gologging.Debug("Using cached thumbnail for track: " + t.ID)
-		t.Artwork = dest
-	}
-}
-
-func hasPlayableReply(m *telegram.NewMessage) bool {
-	if !m.IsReply() {
-		return false
-	}
-	rmsg, err := m.GetReplyMessage()
-	if err != nil {
-		return false
-	}
-	v, a := playableMedia(rmsg)
-	return v || a
-}
-
-func combineErrors(prefix string, errs []string) error {
-	if len(errs) == 0 {
-		return errors.New(prefix)
-	}
-	return errors.New(prefix + "\n• " + strings.Join(errs, "\n• "))
-}
-
-func Init() (func(), error) {
-	return func() {
-		rc.Close()
-	}, nil
-}
