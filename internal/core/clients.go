@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/Laky-64/gologging"
 	"github.com/amarnathcjd/gogram/telegram"
@@ -67,10 +66,9 @@ func initBot() error {
 		Logger: telegram.WrapSimpleLogger(
 			GetTgLogger("gogram", telegram.LogError),
 		),
-		LogLevel:     telegram.LogError,
-		ParseMode:    "HTML",
-		Session:      "bot.session",
-		FloodHandler: handleFlood,
+		LogLevel:  telegram.LogError,
+		ParseMode: "HTML",
+		Session:   "bot.session",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create bot client: %w", err)
@@ -115,7 +113,7 @@ func initAssistants() error {
 		}
 
 		assistant.Client.SendMessage(Bot.Me().Username, "/start")
-		assistant.Client.JoinChannel("TheTeamVivek")
+		assistant.Client.JoinChannel("ArcBotz")
 
 		if assistant.Self.Username != "" {
 			gologging.InfoF(
@@ -169,22 +167,6 @@ func initAssistant(
 		Self:   user,
 		Ntg:    ubot.NewContext(client),
 	}, nil
-}
-
-func handleFlood(err error) bool {
-	wait := telegram.GetFloodWait(err)
-	if wait <= 0 {
-		return false
-	}
-
-	if wait > 10 {
-		gologging.WarnF("Flood wait too long, skipping sleep %d seconds", wait)
-		return false
-	}
-
-	gologging.WarnF("Flood wait detected, sleeping %d seconds", wait)
-	time.Sleep(time.Duration(wait) * time.Second)
-	return true
 }
 
 func resolveSession(session string) (string, error) {
